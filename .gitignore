@@ -1,0 +1,21 @@
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# Environment variables / secrets (once the backend exists)
+.env
+.env.local
+
+# Dependencies (once the backend exists)
+node_modules/
+__pycache__/
+*.pyc
+
+# Infra state (once Terraform/OpenTofu exists)
+*.tfstate
+*.tfstate.backup
+.terraform/
