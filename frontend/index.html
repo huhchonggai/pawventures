@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pawmap SG</title>
+<title>PawLah SG</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
       <!-- <svg viewBox="0 0 24 24" width="22" height="22"><use href="#paw-icon"></use></svg> -->
       <img src="logo/miaava.png" width="35" height="35" alt="" style="border-radius:50%">
     </span>
-    Pawmap <span class="wordmark-sub">SG</span>
+    PawLah <span class="wordmark-sub">SG</span>
   </div>
 
   <nav class="filters" aria-label="Category filters">
@@ -47,6 +47,43 @@
     <div id="map"></div>
   </section>
 </main>
+
+<button id="contributeFab" class="fab" aria-label="Contribute a location">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Contribute
+</button>
+
+<div id="contributeOverlay" class="modal-overlay" hidden>
+  <div class="modal-card">
+    <button id="contributeClose" class="modal-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="16" height="16"><use href="#close-icon"></use></svg>
+    </button>
+    <h2 class="modal-title">Suggest a location</h2>
+    <p class="modal-sub">Know a dog friendly spot? Fill this in — anonymous is fine.</p>
+    <form id="contributeForm">
+      <label>Name <span class="optional">(optional)</span></label>
+      <input type="text" id="cName" name="submitter_name">
+
+      <label>Park name*</label>
+      <input type="text" id="cParkName" name="park_name" required>
+
+      <label>Address*</label>
+      <input type="text" id="cAddress" name="address" required>
+
+      <label>Details*</label>
+      <textarea id="cDetails" name="details" rows="3" required placeholder="What makes it dog-friendly? Fenced? Shaded? Any tips?"></textarea>
+
+      <label>Nearest carpark <span class="optional">(optional)</span></label>
+      <input type="text" id="cCarpark" name="nearest_carpark">
+
+      <!-- honeypot — hidden via CSS, real users wont fill this up -->
+      <input type="text" id="cWebsite" name="website" class="hp-field" tabindex="-1" autocomplete="off">
+
+      <button type="submit" class="modal-submit">Submit</button>
+      <p id="contributeStatus"></p>
+    </form>
+  </div>
+</div>
 
 <!-- Shared icon sprite -->
 <svg width="0" height="0" style="position:absolute">

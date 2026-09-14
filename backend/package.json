@@ -1,0 +1,17 @@
+{
+  "name": "pawventures-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "API for Pawventures — locations, likes, and community contributions.",
+  "scripts": {
+    "seed": "node seed.js",
+    "start": "node --env-file=.env server.js",
+    "dev": "node --env-file=.env --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0"
+  }
+}

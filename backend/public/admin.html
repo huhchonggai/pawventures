@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Pawventures — Admin</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #1F2E27; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 16px; margin-top: 40px; }
+  #keyForm { display: flex; gap: 8px; margin-bottom: 24px; }
+  input[type="password"], input[type="text"], input[type="number"], textarea {
+    padding: 8px 10px; border: 1px solid #DCE3DA; border-radius: 8px; font-family: inherit; font-size: 13px;
+  }
+  button { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .approve { background: #2F6B4F; color: #fff; }
+  .reject { background: #E2672B; color: #fff; }
+  .submit { background: #2F6B4F; color: #fff; margin-top: 8px; }
+  .card { border: 1px solid #DCE3DA; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+  .card h3 { margin: 0 0 6px; }
+  .card p { margin: 4px 0; font-size: 14px; color: #444; }
+  .meta { font-size: 12px; color: #888; }
+  .empty { color: #888; font-size: 14px; }
+  #locationForm { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+  #locationForm .row { display: flex; gap: 8px; }
+  #locationForm .row input { flex: 1; }
+  #locationForm label { font-size: 12px; color: #5B6B62; margin-bottom: -4px; }
+  #locationStatus { font-size: 13px; margin-top: 8px; }
+  #locationStatus.ok { color: #2F6B4F; }
+  #locationStatus.err { color: #E2672B; }
+</style>
+</head>
+<body>
+
+<h1>Pawventures admin</h1>
+
+<form id="keyForm">
+  <input type="password" id="adminKey" placeholder="Admin key" />
+  <button type="submit">Load</button>
+</form>
+
+<h2>Add a location</h2>
+<form id="locationForm">
+  <label>Name</label>
+  <input type="text" id="locName" required>
+
+  <div class="row">
+    <div style="flex:1">
+      <label>Area</label>
+      <input type="text" id="locArea" required placeholder="e.g. North">
+    </div>
+    <div style="flex:1">
+      <label>Category</label>
+      <select id="locCategory" style="padding:8px 10px;border:1px solid #DCE3DA;border-radius:8px;width:100%">
+        <option value="park">Park</option>
+        <option value="cafe">Cafe</option>
+        <option value="mall">Mall</option>
+        <option value="vet">Vet</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div style="flex:1">
+      <label>Latitude</label>
+      <input type="number" step="any" id="locLat" required>
+    </div>
+    <div style="flex:1">
+      <label>Longitude</label>
+      <input type="number" step="any" id="locLng" required>
+    </div>
+  </div>
+
+  <label>Address</label>
+  <input type="text" id="locAddress" required>
+
+  <label>Hours</label>
+  <input type="text" id="locHours" placeholder="e.g. 24 hours">
+
+  <label>Tags (comma separated)</label>
+  <input type="text" id="locTags" placeholder="Fenced, Off-leash, Water point">
+
+  <label>Note</label>
+  <textarea id="locNote" rows="2"></textarea>
+
+  <label>Custom id (optional — auto-generated from name if left blank)</label>
+  <input type="text" id="locId" placeholder="e.g. jurong-lake-gardens">
+
+  <button type="submit" class="submit">Add location</button>
+  <p id="locationStatus"></p>
+</form>
+
+<h2>Pending contributions</h2>
+<div id="list"></div>
+
+<script>
+  let adminKey = sessionStorage.getItem('pawventures_admin_key') || '';
+  document.getElementById('adminKey').value = adminKey;
+
+  document.getElementById('keyForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    adminKey = document.getElementById('adminKey').value.trim();
+    sessionStorage.setItem('pawventures_admin_key', adminKey);
+    loadContributions();
+  });
+
+  // --- Add a location ---
+  document.getElementById('locationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const statusEl = document.getElementById('locationStatus');
+    statusEl.textContent = '';
+    statusEl.className = '';
+
+    const tagsRaw = document.getElementById('locTags').value.trim();
+    const body = {
+      id: document.getElementById('locId').value.trim() || undefined,
+      name: document.getElementById('locName').value.trim(),
+      area: document.getElementById('locArea').value.trim(),
+      category: document.getElementById('locCategory').value,
+      lat: parseFloat(document.getElementById('locLat').value),
+      lng: parseFloat(document.getElementById('locLng').value),
+      address: document.getElementById('locAddress').value.trim(),
+      hours: document.getElementById('locHours').value.trim() || undefined,
+      tags: tagsRaw ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [],
+      note: document.getElementById('locNote').value.trim() || undefined,
+    };
+
+    const res = await fetch('/api/admin/locations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      body: JSON.stringify(body),
+    });
+    const result = await res.json();
+
+    if (res.ok) {
+      statusEl.textContent = `Added "${body.name}" (id: ${result.id}).`;
+      statusEl.className = 'ok';
+      document.getElementById('locationForm').reset();
+    } else {
+      statusEl.textContent = result.error || 'Something went wrong.';
+      statusEl.className = 'err';
+    }
+  });
+  
+  // --- Pending contributions ---
+  const listEl = document.getElementById('list');
+
+  async function loadContributions() {
+    listEl.innerHTML = '<p class="empty">Loading…</p>';
+    const res = await fetch('/api/admin/contributions?status=pending', {
+      headers: { 'x-admin-key': adminKey },
+    });
+    if (res.status === 401) {
+      listEl.innerHTML = '<p class="empty">Wrong key, or none entered.</p>';
+      return;
+    }
+    const items = await res.json();
+    if (items.length === 0) {
+      listEl.innerHTML = '<p class="empty">Nothing pending right now.</p>';
+      return;
+    }
+    listEl.innerHTML = items.map(renderCard).join('');
+    items.forEach((item) => {
+      document.getElementById(`approve-${item.id}`).addEventListener('click', () => act(item.id, 'approve'));
+      document.getElementById(`reject-${item.id}`).addEventListener('click', () => act(item.id, 'reject'));
+    });
+  }
+
+  function renderCard(item) {
+    return `
+      <div class="card">
+        <h3>${escapeHtml(item.park_name)}</h3>
+        <p>${escapeHtml(item.address)}</p>
+        <p>${escapeHtml(item.details)}</p>
+        ${item.nearest_carpark ? `<p><strong>Nearest carpark:</strong> ${escapeHtml(item.nearest_carpark)}</p>` : ''}
+        <p class="meta">Submitted by ${item.submitter_name ? escapeHtml(item.submitter_name) : 'Anonymous'} — ${item.created_at}</p>
+        <button id="approve-${item.id}" class="approve">Approve</button>
+        <button id="reject-${item.id}" class="reject">Reject</button>
+      </div>
+    `;
+  }
+
+  async function act(id, action) {
+    await fetch(`/api/admin/contributions/${id}/${action}`, {
+      method: 'POST',
+      headers: { 'x-admin-key': adminKey },
+    });
+    loadContributions();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  if (adminKey) loadContributions();
+</script>
+</body>
+</html>

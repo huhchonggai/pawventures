@@ -22,7 +22,12 @@ html, body {
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
-/* ---------- Top bar ---------- */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar */
 
 .topbar {
   display: flex;
@@ -100,11 +105,12 @@ html, body {
   color: var(--ink);
 }
 
-/* ---------- Layout ---------- */
+/* Layout */
 
 .layout {
   display: flex;
-  height: calc(100vh - 65px);
+  flex: 1;
+  min-height: 0; /* This lets flex children fill the remaining space instead of overflowing. */
 }
 
 .sidebar {
@@ -147,7 +153,7 @@ html, body {
   margin: 0;
 }
 
-/* ---------- Map panel ---------- */
+/* Map panel */
 
 .map-panel {
   position: relative;
@@ -163,12 +169,12 @@ html, body {
   border: 1px solid var(--line);
 }
 
-/* Mute the OneMap tiles slightly so pins pop */
+/* This lightly boosts saturation on the Grey basemap so it doesn't look too flat. */
 .leaflet-tile-pane {
-  filter: saturate(0.75) contrast(0.96) brightness(1.04);
+  filter: saturate(1.1) contrast(1.02);
 }
 
-/* ---------- Custom paw marker ---------- */
+/* Custom paw marker */
 
 .paw-pin {
   width: 34px;
@@ -213,7 +219,7 @@ html, body {
   box-shadow: 0 2px 6px rgba(31, 46, 39, 0.12);
 }
 
-/* ---------- Detail popup (Leaflet, anchored to the clicked pin) ---------- */
+/* Detail popup (Leaflet, anchored to the clicked pin) */
 
 .park-popup .leaflet-popup-content-wrapper {
   border-radius: var(--radius-lg);
@@ -222,7 +228,7 @@ html, body {
 }
 
 .park-popup .leaflet-popup-content {
-  width: 240px !important;
+  width: min(240px, calc(100vw - 80px)) !important;
   margin: 16px 18px;
 }
 
@@ -289,11 +295,12 @@ html, body {
   margin: 0 0 16px;
 }
 
-.detail-directions {
+/* This selector is more specific than Leaflet's own popup link styling, which otherwise overrides the color set below. */
+.park-popup .leaflet-popup-content a.detail-directions {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  width: 100%;
+  flex: 1;
   justify-content: center;
   padding: 10px;
   border-radius: var(--radius-md);
@@ -304,9 +311,175 @@ html, body {
   text-decoration: none;
 }
 
+.approved-star {
+  color: #E8B923;
+  font-size: 16px;
+  margin-left: 4px;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.like-btn:hover:not(:disabled) {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.like-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Contribute FAB and modal */
+
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(31, 46, 39, 0.25);
+  z-index: 1000;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 46, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal-overlay[hidden] {
+  display: none; /* This rule is required, or the display:flex above would override the hidden attribute. */
+}
+
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg);
+  color: var(--ink-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin: 0 0 6px;
+}
+
+.modal-sub {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 0 0 18px;
+}
+
+#contributeForm label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  margin: 12px 0 4px;
+}
+
+#contributeForm .optional {
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+#contributeForm input,
+#contributeForm textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+}
+
+.hp-field {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+}
+
+.modal-submit {
+  width: 100%;
+  margin-top: 16px;
+  padding: 11px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+#contributeStatus {
+  font-size: 13px;
+  margin-top: 10px;
+}
+#contributeStatus.ok { color: var(--primary); }
+#contributeStatus.err { color: var(--accent); }
+
 @media (max-width: 720px) {
-  .sidebar { display: none; }
-  .detail-card { left: 16px; right: 16px; width: auto; bottom: 16px; }
   .topbar { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
   .area-select { margin-left: 0; }
+  .fab { bottom: 16px; right: 16px; }
 }
