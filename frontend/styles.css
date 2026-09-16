@@ -83,11 +83,6 @@ body {
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-}
-
-.pill-icon {
-  display: none; /* Shown only on mobile mode */
 }
 
 .pill.active {
@@ -205,8 +200,8 @@ body {
 
 /* Custom paw marker */
 .paw-pin {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 50% 50% 50% 4px;
   background: var(--accent);
   transform: rotate(-45deg);
@@ -547,18 +542,18 @@ body {
 
   /* Pills share the row's width equally, keeping spacing consistent across every phone size */
   .pill {
-    flex: 1 1 44px; /* Grows to fill space, but keeps a 44px minimum so it can scroll instead of shrinking further */
-    min-width: 44px;
+    flex: 1;
     height: 32px;
-    padding: 0;
+    padding: 0 8px;
+    font-size: 13px;
+    white-space: nowrap;
     justify-content: center;
   }
-  .pill-icon {
-    display: inline-block;
-  }
+
   .pill-label {
-    display: none;
+    display: inline;
   }
+
   .filters {
     flex-wrap: nowrap;
     gap: 6px;
@@ -566,21 +561,16 @@ body {
     scrollbar-width: none; /* Hides the scrollbar so the strip looks clean */
     width: 100%; /* Stretches to fill the row, giving the flexible pills full width to share */
   }
-  /* Only applies once JS shows the matching arrow, so no space is wasted */
-  .filters.has-prev-arrow {
-    padding-left: 30px;
-  }
-  .filters.has-next-arrow {
-    padding-right: 30px;
-  }
+
   .filters::-webkit-scrollbar {
     display: none; /* Chrome/Safari equivalent of the Firefox rule above */
   }
 
-  /* Solid black circular buttons, shown only when there is more to scroll to */
+  /* Solid black circular button, shown only when there is more to scroll to */
   .filters-scroll-arrow {
     position: absolute;
     top: 0;
+    right: 0;
     width: 28px;
     height: 32px;
     border-radius: 50%;
@@ -593,21 +583,18 @@ body {
     cursor: pointer;
     z-index: 2;
   }
-  .filters-scroll-arrow-prev {
-    left: 0;
-  }
-  .filters-scroll-arrow-next {
-    right: 0;
-  }
+
   .filters-scroll-arrow[hidden] {
     display: none;
   }
+
   .area-select-icon {
     display: inline-block; /* Shown on mobile, since the select itself is hidden to just this icon */
     position: relative;
     z-index: 1;
     pointer-events: none; /* Clicks pass through to the real select beneath it */
   }
+
   .area-select {
     position: absolute;
     inset: 0;
@@ -618,6 +605,7 @@ body {
     height: 100%;
     cursor: pointer;
   }
+
   /* Small dot shown when a specific area is selected, since the name isn't visible anymore */
   .area-filter-dot {
     display: block;
@@ -630,6 +618,7 @@ body {
     background: var(--accent);
     border: 1.5px solid var(--surface);
   }
+
   .area-filter-dot[hidden] {
     display: none;
   }
@@ -647,6 +636,7 @@ body {
   .leaflet-control-attribution {
     font-size: 0px !important;
   }
+
   .leaflet-control-attribution img {
     height: 0px !important;
   }
