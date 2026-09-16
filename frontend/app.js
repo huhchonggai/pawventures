@@ -6,12 +6,17 @@ const singaporeBounds = L.latLngBounds(
 );
 
 const map = L.map('map', {
-  zoomControl: true,
-  attributionControl: true,
+  zoomControl: false, // Added manually below, moved to bottom left so it doesn't sit under the floating topbar on mobile.
+  attributionControl: false, // Also added manually below. Grouped with zoom and without Leaflet's own default credit.
   minZoom: 13,
   maxBounds: singaporeBounds,
   maxBoundsViscosity: 1.0, // A value of 1.0 creates a hard stop at the boundary, with no rubber banding past it
 }).setView([1.3521, 103.8198], 12);
+
+L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+// Removes Leaflet's own credit, but keeps OneMap's
+L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
 
 // OneMap offers several basemap styles (Default, Original, Grey, GreyLite and Night)
 L.tileLayer('https://www.onemap.gov.sg/maps/tiles/Grey/{z}/{x}/{y}.png', {
@@ -40,9 +45,30 @@ const clusterGroup = L.markerClusterGroup({
 
 const listEl = document.getElementById('parkList');
 const areaSelect = document.getElementById('areaSelect');
+const areaFilterDot = document.getElementById('areaFilterDot');
+const filtersNav = document.getElementById('filtersNav');
+const filtersScrollArrow = document.getElementById('filtersScrollArrow');
 const markersById = {};
 let parks = [];
 let selectedId = null;
+
+// Shows the arrow only when categories overflow the visible width
+// Stays hidden today and is only activated once more are added
+function updateFiltersArrow() {
+  if (!filtersNav || !filtersScrollArrow) return;
+  const hasOverflow = filtersNav.scrollWidth > filtersNav.clientWidth + 4;
+  const nearEnd = filtersNav.scrollLeft + filtersNav.clientWidth >= filtersNav.scrollWidth - 4;
+  filtersScrollArrow.hidden = !hasOverflow || nearEnd;
+}
+
+if (filtersNav && filtersScrollArrow) {
+  filtersScrollArrow.addEventListener('click', () => {
+    filtersNav.scrollBy({ left: 100, behavior: 'smooth' });
+  });
+  filtersNav.addEventListener('scroll', updateFiltersArrow);
+  window.addEventListener('resize', updateFiltersArrow);
+  updateFiltersArrow();
+}
 
 function directionsUrl(park) {
   return `https://www.google.com/maps/dir/?api=1&destination=${park.lat},${park.lng}`;
@@ -168,6 +194,9 @@ function applyFilter() {
   const filtered = currentFilteredList();
   renderList(filtered);
   renderMarkers(filtered);
+  // Shows a dot on the mobile filter icon when a specific area is active
+  // Area name itself is not visible once it is collapsed to just an icon
+  if (areaFilterDot) areaFilterDot.hidden = !areaSelect.value;
 }
 
 areaSelect.addEventListener('change', applyFilter);

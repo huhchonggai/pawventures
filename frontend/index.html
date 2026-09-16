@@ -26,16 +26,37 @@
     PawLah <span class="wordmark-sub">SG</span>
   </div>
 
-  <nav class="filters" aria-label="Category filters">
-    <button class="pill active" data-filter="parks">Parks</button>
-    <button class="pill" data-filter="malls" disabled title="Coming soon">Malls</button>
-    <button class="pill" data-filter="cafes" disabled title="Coming soon">Cafes</button>
-    <button class="pill" data-filter="vets" disabled title="Coming soon">Vets</button>
-  </nav>
+  <div class="filters-wrap">
+    <nav class="filters" id="filtersNav" aria-label="Category filters">
+      <button class="pill active" data-filter="parks" title="Parks" aria-label="Parks">
+        <svg class="pill-icon" viewBox="0 0 24 24" width="16" height="16"><use href="#tree-icon"></use></svg>
+        <span class="pill-label">Parks</span>
+      </button>
+      <button class="pill" data-filter="malls" disabled title="Malls — coming soon" aria-label="Malls">
+        <svg class="pill-icon" viewBox="0 0 24 24" width="16" height="16"><use href="#mall-icon"></use></svg>
+        <span class="pill-label">Malls</span>
+      </button>
+      <button class="pill" data-filter="cafes" disabled title="Cafes — coming soon" aria-label="Cafes">
+        <svg class="pill-icon" viewBox="0 0 24 24" width="16" height="16"><use href="#cafe-icon"></use></svg>
+        <span class="pill-label">Cafes</span>
+      </button>
+      <button class="pill" data-filter="vets" disabled title="Vets — coming soon" aria-label="Vets">
+        <svg class="pill-icon" viewBox="0 0 24 24" width="16" height="16"><use href="#vet-icon"></use></svg>
+        <span class="pill-label">Vets</span>
+      </button>
+    </nav>
+    <button class="filters-scroll-arrow" id="filtersScrollArrow" aria-label="Show more categories" hidden>
+      <svg viewBox="0 0 24 24" width="14" height="14"><use href="#arrow-icon"></use></svg>
+    </button>
+  </div>
 
-  <select class="area-select" aria-label="Filter by area" id="areaSelect">
-    <option value="">All areas</option>
-  </select>
+  <div class="area-select-wrap" id="areaSelectWrap">
+    <svg class="area-select-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="#filter-icon"></use></svg>
+    <span class="area-filter-dot" id="areaFilterDot" hidden></span>
+    <select class="area-select" aria-label="Filter by area" id="areaSelect">
+      <option value="">All areas</option>
+    </select>
+  </div>
 </header>
 
 <main class="layout">
@@ -50,7 +71,6 @@
 
 <button id="contributeFab" class="fab" aria-label="Contribute a location">
   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  Contribute
 </button>
 
 <div id="contributeOverlay" class="modal-overlay" hidden>
@@ -101,6 +121,30 @@
     <g id="arrow-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="4" y1="12" x2="20" y2="12"/>
       <polyline points="13 5 20 12 13 19"/>
+    </g>
+    <g id="tree-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l4 6h-2.5l3.5 5.5h-3V19h-4v-4.5h-3l3.5-5.5H8z"/>
+      <line x1="12" y1="19" x2="12" y2="21"/>
+    </g>
+    <g id="mall-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="8" width="16" height="13" rx="1"/>
+      <line x1="4" y1="8" x2="12" y2="3"/>
+      <line x1="20" y1="8" x2="12" y2="3"/>
+      <line x1="9" y1="21" x2="9" y2="14"/>
+      <line x1="15" y1="21" x2="15" y2="14"/>
+    </g>
+    <g id="cafe-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 3v6a2 2 0 002 2v10"/>
+      <path d="M7 3v4M9 3v4M11 3v4"/>
+      <path d="M16 3c-1.5 0-2.5 1.5-2.5 4s1 4 2.5 5v9"/>
+    </g>
+    <g id="vet-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="3"/>
+      <line x1="12" y1="8" x2="12" y2="16"/>
+      <line x1="8" y1="12" x2="16" y2="12"/>
+    </g>
+    <g id="filter-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 5h16l-6 7v6l-4 2v-8z"/>
     </g>
   </defs>
 </svg>

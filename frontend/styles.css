@@ -17,6 +17,7 @@
 html, body {
   margin: 0;
   height: 100%;
+  height: 100dvh; /* Tracks the real visible height on mobile browsers with a dynamic address bar */
   background: var(--bg);
   color: var(--ink);
   font-family: 'Inter', -apple-system, sans-serif;
@@ -28,12 +29,11 @@ body {
 }
 
 /* Top bar */
-
 .topbar {
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 14px 28px;
+  padding: 12px 28px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -41,10 +41,10 @@ body {
 .wordmark {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   font-family: 'Fraunces', serif;
   font-weight: 600;
-  font-size: 21px;
+  font-size: 18px;
   color: var(--primary-dark);
   white-space: nowrap;
 }
@@ -58,8 +58,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 22px;
   border-radius: 50%;
   background: var(--accent-light);
   color: var(--accent);
@@ -81,6 +81,13 @@ body {
   color: var(--ink-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill-icon {
+  display: none; /* Shown only on mobile mode */
 }
 
 .pill.active {
@@ -94,23 +101,46 @@ body {
   cursor: default;
 }
 
-.area-select {
+.area-select-wrap {
   margin-left: auto;
+  margin-right: -10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-muted);
+  position: relative;
+}
+
+.area-select-icon {
+  display: none; /* Shown only on mobile mode */
+}
+
+.area-filter-dot {
+  display: none; /* Shown only on mobile mode */
+}
+
+.area-select {
   font-family: inherit;
   font-size: 13px;
-  padding: 8px 12px;
+  padding: 8px 28px 8px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--line);
-  background: var(--surface);
+  background-color: var(--surface);
   color: var(--ink);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B62' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px 14px;
 }
 
 /* Layout */
-
 .layout {
   display: flex;
   flex: 1;
-  min-height: 0; /* This lets flex children fill the remaining space instead of overflowing. */
+  min-height: 0;
 }
 
 .sidebar {
@@ -154,7 +184,6 @@ body {
 }
 
 /* Map panel */
-
 .map-panel {
   position: relative;
   flex: 1;
@@ -169,16 +198,15 @@ body {
   border: 1px solid var(--line);
 }
 
-/* This lightly boosts saturation on the Grey basemap so it doesn't look too flat. */
+/* Boosts saturation on the Grey basemap so it does not look too flat */
 .leaflet-tile-pane {
   filter: saturate(1.1) contrast(1.02);
 }
 
 /* Custom paw marker */
-
 .paw-pin {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: 50% 50% 50% 4px;
   background: var(--accent);
   transform: rotate(-45deg);
@@ -219,8 +247,7 @@ body {
   box-shadow: 0 2px 6px rgba(31, 46, 39, 0.12);
 }
 
-/* Detail popup (Leaflet, anchored to the clicked pin) */
-
+/* Detail popup. Anchored to the clicked pin */
 .park-popup .leaflet-popup-content-wrapper {
   border-radius: var(--radius-lg);
   border: 1px solid var(--line);
@@ -352,7 +379,6 @@ body {
 }
 
 /* Contribute FAB and modal */
-
 .fab {
   position: fixed;
   bottom: 24px;
@@ -479,7 +505,151 @@ body {
 #contributeStatus.err { color: var(--accent); }
 
 @media (max-width: 720px) {
-  .topbar { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
-  .area-select { margin-left: 0; }
+  /* Map fills the whole screen on mobile. Topbar floats on top instead of pushing it down */
+  .topbar {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    z-index: 1000;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 16px rgba(31, 46, 39, 0.15);
+  }
+
+  .wordmark {
+    order: 1;
+    flex-basis: 0%;
+  }
+
+  .area-select-wrap {
+    order: 2;
+    margin-left: auto;
+    margin-right: 4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .filters-wrap {
+    order: 3;
+    flex-basis: 100%;
+    position: relative;
+    margin-top: 4px;
+  }
+
+  /* Pills share the row's width equally, keeping spacing consistent across every phone size */
+  .pill {
+    flex: 1 1 44px; /* Grows to fill space, but keeps a 44px minimum so it can scroll instead of shrinking further */
+    min-width: 44px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+  .pill-icon {
+    display: inline-block;
+  }
+  .pill-label {
+    display: none;
+  }
+  .filters {
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Hides the scrollbar so the strip looks clean */
+    width: 100%; /* Stretches to fill the row, giving the flexible pills full width to share */
+  }
+  /* Only applies once JS shows the matching arrow, so no space is wasted */
+  .filters.has-prev-arrow {
+    padding-left: 30px;
+  }
+  .filters.has-next-arrow {
+    padding-right: 30px;
+  }
+  .filters::-webkit-scrollbar {
+    display: none; /* Chrome/Safari equivalent of the Firefox rule above */
+  }
+
+  /* Solid black circular buttons, shown only when there is more to scroll to */
+  .filters-scroll-arrow {
+    position: absolute;
+    top: 0;
+    width: 28px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .filters-scroll-arrow-prev {
+    left: 0;
+  }
+  .filters-scroll-arrow-next {
+    right: 0;
+  }
+  .filters-scroll-arrow[hidden] {
+    display: none;
+  }
+  .area-select-icon {
+    display: inline-block; /* Shown on mobile, since the select itself is hidden to just this icon */
+    position: relative;
+    z-index: 1;
+    pointer-events: none; /* Clicks pass through to the real select beneath it */
+  }
+  .area-select {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    border: none;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  /* Small dot shown when a specific area is selected, since the name isn't visible anymore */
+  .area-filter-dot {
+    display: block;
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 1.5px solid var(--surface);
+  }
+  .area-filter-dot[hidden] {
+    display: none;
+  }
+
+  .map-panel {
+    padding: 0; /* No inset margin. Map runs edge-to-edge now */
+  }
+
+  #map {
+    border-radius: 0;
+    border: none;
+  }
+
+  /* Shrinks OneMap's required attribution text so it takes up less room on a narrow screen */
+  .leaflet-control-attribution {
+    font-size: 0px !important;
+  }
+  .leaflet-control-attribution img {
+    height: 0px !important;
+  }
+
   .fab { bottom: 16px; right: 16px; }
 }
