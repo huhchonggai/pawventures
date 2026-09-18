@@ -41,4 +41,12 @@ db.exec(`
   );
 `);
 
+// Adds the size column to locations tables created before this field existed
+// SQLite has no "ADD COLUMN IF NOT EXISTS", so a duplicate column error here just means it already ran
+try {
+  db.exec('ALTER TABLE locations ADD COLUMN size TEXT;');
+} catch (err) {
+  if (!/duplicate column/i.test(err.message)) throw err;
+}
+
 module.exports = db;

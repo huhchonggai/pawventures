@@ -1,0 +1,62 @@
+[
+  {
+    "id": "One Holland Village",
+    "name": "One Holland Village",
+    "area": "Central",
+    "lat": 1.3114690370136868,
+    "lng": 103.79374903153001,
+    "address": "7 Holland Vlg Wy, Singapore 275748",
+    "hours": "11.00am - 09.00pm",
+    "note": "Pet welcoming mall with open air courtyards, alfresco dining and selected pet friendly stores (do check with individual stores if pets are allowed in). Amenities include water coolers, leash hooks and dedicated pet friendly lifts. Pets must be leashed and carriers or strollers may be required in certain shops. Pet amenities include water coolers and leash hooks. Nearest MRT station is Holland Village MRT. Carparking spaces available within the mall."
+  },
+  {
+    "id": "Clarke Quay Central",
+    "name": "Clarke Quay Central",
+    "area": "Central",
+    "lat": 1.289030339972288,
+    "lng": 103.84660854889415,
+    "address": "6 Eu Tong Sen St, Singapore 059817",
+    "hours": "11.00am - 10.00pm",
+    "note": "Riverside mall with alfresco restaurants, scenic walking areas and dedicated pet amenities including water stations. Dogs can enjoy a stroll while leashed while cats are best kept in carriers or strollers indoors. Nearest MRT stations are Clarke Quay MRT and Fort Canning MRT. Carparking spaces available around the area."
+  },
+  {
+    "id": "Tanglin Mall",
+    "name": "Tanglin Mall",
+    "area": "Central",
+    "lat": 1.3048330523023215,
+    "lng": 103.82345548058986,
+    "address": "163 Tanglin Rd, Singapore 247933",
+    "hours": "10.00am - 10.00pm",
+    "note": "Mall with designated outdoor areas for pets, including a Pet Garden where dogs can play off leash. Pets are not permitted indoors but are welcome at selected alfresco dining areas (do check with individual restaurants). Guide dogs are allowed inside the mall. Pet supplies and grooming services are also available. Nearest MRT station is Orchard Boulevard MRT. Carparking spaces available within the mall."
+  },
+  {
+    "id": "VivoCity",
+    "name": "VivoCity",
+    "area": "South",
+    "lat": 1.26472805220183,
+    "lng": 103.82316296831758,
+    "address": "1 HarbourFront Walk, Singapore 098585",
+    "hours": "10.00am - 10.00pm",
+    "note": "Waterfront mall with a rooftop dog park, alfresco dining and selected pet friendly stores (however, do ask individual stores if pets are allowed in) Dogs can play off leash at the designated rooftop park, while carriers or strollers may be required indoors. Pet supplies and grooming services are also available within the mall. Nearest MRT station is HarbourFront MRT. Carparking spaces available within the mall."
+  },
+  {
+    "id": "The Star Vista",
+    "name": "The Star Vista",
+    "area": "West",
+    "lat": 1.3068176477907527,
+    "lng": 103.78839628848347,
+    "address": "1 Vista Exchange Grn, Singapore 138617",
+    "hours": "10.00am - 10.00pm",
+    "note": "Pet friendly open air mall with wide walkways and alfresco dining. Pets are allowed in common areas and specific outdoor dining spaces, with dogs required to be leashed and cats kept in carriers or strollers. The nearby HortPark and Kent Ridge Park is also a good choice to walk your pets. Nearest MRT station is Buona Vista MRT and carparking spaces available within the mall."
+  },
+  {
+    "id": "NEX",
+    "name": "NEX",
+    "area": "North",
+    "lat": 1.3508069981425381,
+    "lng": 103.87206117662485,
+    "address": "Serangoon Central, 23, Singapore 556083",
+    "hours": "10.30am - 10.30pm",
+    "note": "Mall with a rooftop K9 Park and pet store offering supplies and grooming services. Pets are not permitted in common areas, escalators or regular lifts and must use the dedicated pet lift to access the designated areas. Dogs can play off leash at the K9 Park, while cats should be kept in carriers. Nearest MRT station is Serangoon MRT. Carparking spaces available within the mall."
+  }
+]

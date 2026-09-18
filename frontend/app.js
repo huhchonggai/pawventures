@@ -26,13 +26,23 @@ L.tileLayer('https://www.onemap.gov.sg/maps/tiles/Grey/{z}/{x}/{y}.png', {
   attribution: '<img src="https://www.onemap.gov.sg/web-assets/images/logo/om_logo_round@2x.png" style="height:14px;vertical-align:middle;margin-right:4px"> OneMap | Map data &copy; contributors, Singapore Land Authority',
 }).addTo(map);
 
-const pawIcon = L.divIcon({
-  className: '',
-  html: `<div class="paw-pin">${PAW_SVG}</div>`,
-  iconSize: [34, 34],
-  iconAnchor: [17, 30],
-  popupAnchor: [0, -30],
-});
+// One icon per category — the color itself comes from CSS (.paw-pin vs .paw-pin.mall)
+const pawIconsByCategory = {
+  park: L.divIcon({
+    className: '',
+    html: `<div class="paw-pin">${PAW_SVG}</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 30],
+    popupAnchor: [0, -30],
+  }),
+  mall: L.divIcon({
+    className: '',
+    html: `<div class="paw-pin mall">${PAW_SVG}</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 30],
+    popupAnchor: [0, -30],
+  }),
+};
 
 const clusterGroup = L.markerClusterGroup({
   iconCreateFunction: (cluster) => L.divIcon({
@@ -49,8 +59,29 @@ const areaFilterDot = document.getElementById('areaFilterDot');
 const filtersNav = document.getElementById('filtersNav');
 const filtersScrollArrow = document.getElementById('filtersScrollArrow');
 const markersById = {};
-let parks = [];
+let parks = []; // Holds every fetched location, of any category. Name is a holdover from when only parks existed
 let selectedId = null;
+
+// Maps each pill's data filter value to the category string the backend actually uses
+const CATEGORY_MAP = { parks: 'park', malls: 'mall', cafes: 'cafe', vets: 'vet' };
+const selectedCategories = new Set(['park']); // Starts with only Parks shown, matching the pill that's active by default
+
+// Toggles a category in or out of the current selection when its pill is clicked
+const categoryPills = document.querySelectorAll('.pill[data-filter]');
+categoryPills.forEach((pill) => {
+  pill.addEventListener('click', () => {
+    if (pill.disabled) return;
+    const category = CATEGORY_MAP[pill.dataset.filter];
+    if (selectedCategories.has(category)) {
+      selectedCategories.delete(category);
+      pill.classList.remove('active');
+    } else {
+      selectedCategories.add(category);
+      pill.classList.add('active');
+    }
+    applyFilter();
+  });
+});
 
 // Shows the arrow only when categories overflow the visible width
 // Stays hidden today and is only activated once more are added
@@ -101,10 +132,12 @@ function detailHTML(park) {
   const tags = park.tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join('');
   const star = park.like_count >= 10 ? '<span class="approved-star" title="Community approved">★</span>' : '';
   const liked = getLikedSet().has(park.id);
+  const size = park.size ? `<p class="detail-size">${escapeHtml(park.size)}</p>` : '';
   return `
     <p class="detail-area">${escapeHtml(park.area)}</p>
     <h2 class="detail-name">${escapeHtml(park.name)}${star}</h2>
     <p class="detail-address">${escapeHtml(park.address)}</p>
+    ${size}
     <div class="detail-tags">${tags}</div>
     <p class="detail-hours">${escapeHtml(park.hours)}</p>
     <p class="detail-note">"${escapeHtml(park.note)}"</p>
@@ -123,7 +156,7 @@ window.likePark = async function (id) {
   if (liked.has(id)) return;
 
   try {
-    const res = await fetch(`/api/locations/${id}/like`, { method: 'POST' });
+    const res = await fetch(`/api/locations/${encodeURIComponent(id)}/like`, { method: 'POST' });
     if (!res.ok) return;
     const result = await res.json();
 
@@ -159,7 +192,8 @@ function renderList(items) {
 function renderMarkers(items) {
   clusterGroup.clearLayers();
   items.forEach((park) => {
-    const marker = L.marker([park.lat, park.lng], { icon: pawIcon });
+    const icon = pawIconsByCategory[park.category] || pawIconsByCategory.park;
+    const marker = L.marker([park.lat, park.lng], { icon });
     marker.bindTooltip(park.name, { direction: 'top', offset: [0, -28], className: 'park-tooltip' });
     marker.bindPopup(detailHTML(park), { className: 'park-popup', maxWidth: 260 });
     marker.on('click', () => {
@@ -187,7 +221,9 @@ function selectPark(id, panMap) {
 
 function currentFilteredList() {
   const area = areaSelect.value;
-  return area ? parks.filter((p) => p.area === area) : parks;
+  let filtered = parks.filter((p) => selectedCategories.has(p.category));
+  if (area) filtered = filtered.filter((p) => p.area === area);
+  return filtered;
 }
 
 function applyFilter() {

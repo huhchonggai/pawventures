@@ -86,8 +86,8 @@ body {
 }
 
 .pill.active {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--accent);
+  border-color: #fff;
   color: #fff;
 }
 
@@ -198,18 +198,22 @@ body {
   filter: saturate(1.1) contrast(1.02);
 }
 
-/* Custom paw marker */
+/* Custom paw marker — green is the default (parks); .mall overrides it to orange */
 .paw-pin {
   width: 42px;
   height: 42px;
   border-radius: 50% 50% 50% 4px;
-  background: var(--accent);
+  background: var(--primary);
   transform: rotate(-45deg);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 6px rgba(31, 46, 39, 0.25);
   border: 2px solid var(--surface);
+}
+
+.paw-pin.mall {
+  background: #eec12e;
 }
 
 .paw-pin svg {
@@ -280,6 +284,12 @@ body {
   font-size: 13px;
   color: var(--ink-muted);
   margin: 0 0 12px;
+}
+
+.detail-size {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  margin: -8px 0 12px;
 }
 
 .detail-tags {
