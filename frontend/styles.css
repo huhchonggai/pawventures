@@ -200,8 +200,8 @@ body {
 
 /* Custom paw marker — green is the default (parks); .mall overrides it to orange */
 .paw-pin {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border-radius: 50% 50% 50% 4px;
   background: var(--primary);
   transform: rotate(-45deg);

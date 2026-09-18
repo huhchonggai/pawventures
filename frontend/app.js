@@ -1,4 +1,5 @@
-const PAW_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="6.5" cy="8" r="2.1"/><circle cx="12" cy="5.6" r="2.3"/><circle cx="17.5" cy="8" r="2.1"/><path d="M12 10.5c-3.2 0-6.2 2.6-6.2 5.4 0 1.7 1.4 2.6 3 2.2 1.1-.3 2-1 3.2-1s2.1.7 3.2 1c1.6.4 3-.5 3-2.2 0-2.8-3-5.4-6.2-5.4z"/></svg>';
+const LEAF_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20"/><path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13"/></svg>';
+const BAG_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(12,12)"><rect x="-7" y="-4" width="14" height="13" rx="1"/><path d="M-3-4a3 5 0 016 0"/></g></svg>';
 
 const singaporeBounds = L.latLngBounds(
   L.latLng(1.15, 103.55), // This is the southwest corner, with a small buffer around the mainland
@@ -30,14 +31,14 @@ L.tileLayer('https://www.onemap.gov.sg/maps/tiles/Grey/{z}/{x}/{y}.png', {
 const pawIconsByCategory = {
   park: L.divIcon({
     className: '',
-    html: `<div class="paw-pin">${PAW_SVG}</div>`,
+    html: `<div class="paw-pin">${LEAF_SVG}</div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 30],
     popupAnchor: [0, -30],
   }),
   mall: L.divIcon({
     className: '',
-    html: `<div class="paw-pin mall">${PAW_SVG}</div>`,
+    html: `<div class="paw-pin mall">${BAG_SVG}</div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 30],
     popupAnchor: [0, -30],
