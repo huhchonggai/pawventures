@@ -32,7 +32,7 @@ const pawIconsByCategory = {
   park: L.divIcon({
     className: '',
     html: `<div class="paw-pin">${LEAF_SVG}</div>`,
-    iconSize: [34, 34],
+    iconSize: [44, 44],
     iconAnchor: [17, 30],
     popupAnchor: [0, -30],
   }),
