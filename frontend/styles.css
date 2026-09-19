@@ -495,7 +495,7 @@ body {
   padding: 11px;
   border: none;
   border-radius: var(--radius-md);
-  background: var(--primary);
+  background: var(--accent);
   color: #fff;
   font-size: 14px;
   font-weight: 500;
