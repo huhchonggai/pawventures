@@ -27,6 +27,11 @@ TLDR, I hope this project is functional and useful while at the same time, using
 - A "community approved" star badge appears on a location's popup once it
   passes 10 likes
 - Filter by area (eg, Bishan, Jurong, Toa Payoh)
+- A "locate me" button on the map finds the user's current position via the
+  browser's geolocation API and drops a red pin there. Pins within a
+  configurable radius then get their own label showing name and distance, with no click or hover needed to see it. 
+  Location is computed entirely in the browser (straight line distance via the
+  haversine formula). It is never sent to the backend
 - A floating "Contribute" button opens a form for suggesting a new
   location. It can be anonymous or with a name, no login required
 - A small backend API (Node + Express + SQLite) backs the map, the like
@@ -96,6 +101,7 @@ pawventures/
 | Change the color palette / fonts | `:root` CSS variables at the top of `frontend/styles.css` |
 | Add a new area to the filter dropdown | Nothing to edit manually — it's generated automatically from whatever `area` values exist in the database |
 | Change the map's basemap style | The OneMap tile URL in `frontend/app.js` (options: Default, Original, Grey, GreyLite, Night) |
+| Change how far the "nearby" distance labels reach | `NEARBY_LABEL_RADIUS_KM` in `frontend/app.js` |
 | Change rate limits for contributions/likes | `backend/ratelimiters/ratelimiters.js` |
 | Change the admin password | `ADMIN_KEY` in `backend/.env` (never commit the real value) |
 
@@ -146,6 +152,8 @@ quick manual pass covers it for now,
 - [ ] Area filter narrows the pins shown correctly
 - [ ] The like button increments the count and shows the star badge past 10 likes
 - [ ] "Get directions" opens Google Maps at the right coordinates, with the correct button color
+- [ ] The locate button drops a "you are here" pin and nearby pins pick up
+      a distance label (requires allowing location access when prompted)
 - [ ] The contribute form submits successfully and the entry shows up in the admin page
 - [ ] The admin page correctly rejects a wrong admin key
 - [ ] Browser console is free of errors (right-click → Inspect → Console)
@@ -165,6 +173,10 @@ A few things worth knowing about, given this app accepts public input,
 - Contribution submissions and likes are both rate-limited per IP
 - Admin routes are protected by a single shared secret (`ADMIN_KEY`),
   which is enough for a solo admin but is not a real user account system
+- The locate me feature requires HTTPS once deployed — browsers block the
+  Geolocation API over plain HTTP, with `localhost` as the one exception
+  for local testing — worth confirming pawlah.sg is actually served over
+  `https://` before relying on this in production
 
 ## Tech stack
 
