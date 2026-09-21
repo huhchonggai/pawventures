@@ -16,6 +16,95 @@ const map = L.map('map', {
 
 L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
+// Icon for the locate button
+const LOCATE_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="7"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>';
+// Icon for the "you are here" pin
+const PERSON_SVG = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(12,12)"><circle cx="0" cy="-5" r="3"/><path d="M-6 8c0-4 3-7 6-7s6 3 6 7"/></g></svg>';
+
+// Same pin shape as the park and mall markers
+const userLocationIcon = L.divIcon({
+  className: '',
+  html: `<div class="paw-pin you-are-here">${PERSON_SVG}</div>`,
+  iconSize: [34, 34],
+  iconAnchor: [17, 30],
+  popupAnchor: [0, -30],
+});
+
+// Refetches the user's position fresh on every click, rather than tracking it live
+let userLocationMarker = null;
+let userLocation = null; // { lat, lng } — set once located, used for distance display and sorting
+const NEARBY_LABEL_RADIUS_KM = 30; // Only pins within this range get a permanent distance label on the map
+
+// Straight line distance in km between two lat/lng points, learnt about haversine formula, interesting
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const LocateControl = L.Control.extend({
+  options: { position: 'bottomleft' },
+  onAdd: function () {
+    // Reuses Leaflet's own control classes, so this matches zoom's size and shadow exactly
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control locate-btn');
+    const link = L.DomUtil.create('a', '', container);
+    link.href = '#';
+    link.title = 'Show my location';
+    link.setAttribute('aria-label', 'Show my location');
+    link.innerHTML = LOCATE_SVG;
+
+    L.DomEvent.disableClickPropagation(container); // Stops the click from also reaching the map underneath
+
+    L.DomEvent.on(link, 'click', (e) => {
+      L.DomEvent.preventDefault(e);
+      if (link.classList.contains('leaflet-disabled')) return;
+
+      if (!navigator.geolocation) {
+        console.error('Geolocation is not supported by this browser');
+        return;
+      }
+
+      link.classList.add('leaflet-disabled');
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+
+          if (userLocationMarker) {
+            userLocationMarker.setLatLng([latitude, longitude]);
+          } else {
+            userLocationMarker = L.marker([latitude, longitude], { icon: userLocationIcon }).addTo(map);
+            userLocationMarker.bindTooltip('You are here', {
+              permanent: true,
+              direction: 'top',
+              offset: [0, -28],
+              className: 'you-are-here-label',
+            });
+          }
+
+          userLocation = { lat: latitude, lng: longitude };
+          applyFilter();
+
+          map.setView([latitude, longitude], 15);
+          link.classList.remove('leaflet-disabled');
+        },
+        (err) => {
+          console.error('Could not get location:', err.message);
+          link.classList.remove('leaflet-disabled');
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
+      );
+    });
+
+    return container;
+  },
+});
+
+map.addControl(new LocateControl());
+
 // Removes Leaflet's own credit, but keeps OneMap's
 L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
 
@@ -181,9 +270,13 @@ function renderList(items) {
     const li = document.createElement('li');
     li.className = 'park-row' + (park.id === selectedId ? ' selected' : '');
     li.dataset.id = park.id;
+    const distance = userLocation
+      ? `<p class="park-row-distance">${distanceKm(userLocation.lat, userLocation.lng, park.lat, park.lng).toFixed(1)} km</p>`
+      : '';
     li.innerHTML = `
       <p class="park-row-name">${park.name}</p>
       <p class="park-row-area">${park.area}</p>
+      ${distance}
     `;
     li.addEventListener('click', () => selectPark(park.id, true));
     listEl.appendChild(li);
@@ -195,7 +288,19 @@ function renderMarkers(items) {
   items.forEach((park) => {
     const icon = pawIconsByCategory[park.category] || pawIconsByCategory.park;
     const marker = L.marker([park.lat, park.lng], { icon });
-    marker.bindTooltip(park.name, { direction: 'top', offset: [0, -28], className: 'park-tooltip' });
+
+    // Only pins close by get a permanent label
+    let tooltipText = park.name;
+    let permanent = false;
+    if (userLocation) {
+      const dist = distanceKm(userLocation.lat, userLocation.lng, park.lat, park.lng);
+      if (dist <= NEARBY_LABEL_RADIUS_KM) {
+        tooltipText = `${park.name} — ${dist.toFixed(1)} km away`;
+        permanent = true;
+      }
+    }
+    marker.bindTooltip(tooltipText, { permanent, direction: 'top', offset: [0, -28], className: 'park-tooltip' });
+
     marker.bindPopup(detailHTML(park), { className: 'park-popup', maxWidth: 260 });
     marker.on('click', () => {
       selectedId = park.id;
@@ -224,6 +329,16 @@ function currentFilteredList() {
   const area = areaSelect.value;
   let filtered = parks.filter((p) => selectedCategories.has(p.category));
   if (area) filtered = filtered.filter((p) => p.area === area);
+
+  // Once located, nearest locations are shown first, otherwise the original order is kept
+  if (userLocation) {
+    filtered = [...filtered].sort((a, b) => {
+      const distA = distanceKm(userLocation.lat, userLocation.lng, a.lat, a.lng);
+      const distB = distanceKm(userLocation.lat, userLocation.lng, b.lat, b.lng);
+      return distA - distB;
+    });
+  }
+
   return filtered;
 }
 

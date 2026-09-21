@@ -178,6 +178,12 @@ body {
   margin: 0;
 }
 
+.park-row-distance {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  margin: 2px 0 0;
+}
+
 /* Map panel */
 .map-panel {
   position: relative;
@@ -216,6 +222,10 @@ body {
   background: #eec12e;
 }
 
+.paw-pin.you-are-here {
+  background: #E5484D;
+}
+
 .paw-pin svg {
   transform: rotate(45deg);
   color: #fff;
@@ -234,6 +244,17 @@ body {
   color: var(--accent);
 }
 
+.locate-btn a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.locate-btn a:hover {
+  color: var(--primary);
+}
+
 .leaflet-tooltip.park-tooltip {
   font-family: 'Inter', sans-serif;
   font-size: 12.5px;
@@ -244,6 +265,17 @@ body {
   border-radius: 8px;
   padding: 4px 10px;
   box-shadow: 0 2px 6px rgba(31, 46, 39, 0.12);
+}
+
+.leaflet-tooltip.you-are-here-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #E5484D;
+  background: var(--surface);
+  border: 1px solid #E5484D;
+  border-radius: 8px;
+  padding: 2px 8px;
 }
 
 /* Detail popup. Anchored to the clicked pin */
@@ -510,7 +542,6 @@ body {
 #contributeStatus.err { color: var(--accent); }
 
 @media (max-width: 720px) {
-  /* Map fills the whole screen on mobile. Topbar floats on top instead of pushing it down */
   .topbar {
     position: fixed;
     top: calc(12px + env(safe-area-inset-top));
@@ -550,7 +581,6 @@ body {
     margin-top: 4px;
   }
 
-  /* Pills share the row's width equally, keeping spacing consistent across every phone size */
   .pill {
     flex: 1;
     height: 32px;
@@ -568,15 +598,14 @@ body {
     flex-wrap: nowrap;
     gap: 6px;
     overflow-x: auto;
-    scrollbar-width: none; /* Hides the scrollbar so the strip looks clean */
-    width: 100%; /* Stretches to fill the row, giving the flexible pills full width to share */
+    scrollbar-width: none;
+    width: 100%;
   }
 
   .filters::-webkit-scrollbar {
-    display: none; /* Chrome/Safari equivalent of the Firefox rule above */
+    display: none;
   }
 
-  /* Solid black circular button, shown only when there is more to scroll to */
   .filters-scroll-arrow {
     position: absolute;
     top: 0;
@@ -599,10 +628,10 @@ body {
   }
 
   .area-select-icon {
-    display: inline-block; /* Shown on mobile, since the select itself is hidden to just this icon */
+    display: inline-block;
     position: relative;
     z-index: 1;
-    pointer-events: none; /* Clicks pass through to the real select beneath it */
+    pointer-events: none;
   }
 
   .area-select {
@@ -616,7 +645,6 @@ body {
     cursor: pointer;
   }
 
-  /* Small dot shown when a specific area is selected, since the name isn't visible anymore */
   .area-filter-dot {
     display: block;
     position: absolute;
@@ -634,7 +662,7 @@ body {
   }
 
   .map-panel {
-    padding: 0; /* No inset margin. Map runs edge-to-edge now */
+    padding: 0;
   }
 
   #map {
@@ -642,7 +670,6 @@ body {
     border: none;
   }
 
-  /* Shrinks OneMap's required attribution text so it takes up less room on a narrow screen */
   .leaflet-control-attribution {
     font-size: 0px !important;
   }
