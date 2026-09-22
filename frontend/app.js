@@ -76,12 +76,18 @@ const LocateControl = L.Control.extend({
           if (userLocationMarker) {
             userLocationMarker.setLatLng([latitude, longitude]);
           } else {
-            userLocationMarker = L.marker([latitude, longitude], { icon: userLocationIcon }).addTo(map);
+            userLocationMarker = L.marker([latitude, longitude], { icon: userLocationIcon, draggable: true }).addTo(map);
             userLocationMarker.bindTooltip('You are here', {
               permanent: true,
               direction: 'top',
               offset: [0, -28],
               className: 'you-are-here-label',
+            });
+            // Allow user to drag the pin to where they actually are or want to be at
+            userLocationMarker.on('dragend', () => {
+              const { lat, lng } = userLocationMarker.getLatLng();
+              userLocation = { lat, lng };
+              applyFilter();
             });
           }
 
