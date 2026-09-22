@@ -100,6 +100,16 @@
   </div>
 </div>
 
+<!-- Slides up when the locate button finds the user, listing nearby locations. Tap the handle to expand/collapse -->
+<div id="nearbySheetBackdrop" class="nearby-sheet-backdrop"></div>
+<div id="nearbySheet" class="nearby-sheet">
+  <div class="nearby-sheet-handle" id="nearbySheetHandle" aria-hidden="true"></div>
+  <div class="nearby-sheet-header">
+    <h2 class="nearby-sheet-title" id="nearbySheetTitle">Nearby</h2>
+  </div>
+  <ul class="nearby-sheet-list" id="nearbySheetList"></ul>
+</div>
+
 <!-- Shared icon sprite -->
 <svg width="0" height="0" style="position:absolute">
   <defs>

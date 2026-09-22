@@ -85,8 +85,10 @@ const LocateControl = L.Control.extend({
             });
           }
 
+          // Now that a live location exists, refresh the list/markers so distances and sorting appear
           userLocation = { lat: latitude, lng: longitude };
           applyFilter();
+          openNearbySheet();
 
           map.setView([latitude, longitude], 15);
           link.classList.remove('leaflet-disabled');
@@ -148,6 +150,12 @@ const areaSelect = document.getElementById('areaSelect');
 const areaFilterDot = document.getElementById('areaFilterDot');
 const filtersNav = document.getElementById('filtersNav');
 const filtersScrollArrow = document.getElementById('filtersScrollArrow');
+const nearbySheetBackdrop = document.getElementById('nearbySheetBackdrop');
+const nearbySheet = document.getElementById('nearbySheet');
+const nearbySheetTitle = document.getElementById('nearbySheetTitle');
+const nearbySheetHandle = document.getElementById('nearbySheetHandle');
+const nearbySheetList = document.getElementById('nearbySheetList');
+const NEARBY_SHEET_RADIUS_KM = 3;
 const markersById = {};
 let parks = []; // Holds every fetched location, of any category. Name is a holdover from when only parks existed
 let selectedId = null;
@@ -320,8 +328,12 @@ function selectPark(id, panMap) {
   renderList(currentFilteredList());
   const marker = markersById[id];
   if (marker) {
-    if (panMap) map.panTo([park.lat, park.lng]);
-    marker.openPopup();
+    if (panMap) {
+      map.panTo([park.lat, park.lng]);
+      map.once('moveend', () => marker.openPopup()); // Opening mid-pan can render the popup in the wrong spot
+    } else {
+      marker.openPopup();
+    }
   }
 }
 
@@ -349,7 +361,74 @@ function applyFilter() {
   // Shows a dot on the mobile filter icon when a specific area is active
   // Area name itself is not visible once it is collapsed to just an icon
   if (areaFilterDot) areaFilterDot.hidden = !areaSelect.value;
+  // Keeps the sheet's content fresh even while collapsed, so it's up to date whenever reopened
+  if (userLocation) updateNearbySheet();
 }
+
+// Rebuilds the sheet's list — everything within NEARBY_SHEET_RADIUS_KM, or if there's
+// genuinely nothing that close, the nearest handful regardless of distance instead
+function updateNearbySheet() {
+  const filtered = currentFilteredList(); // Already sorted nearest-first once userLocation is set
+  const withinRadius = filtered.filter(
+    (p) => distanceKm(userLocation.lat, userLocation.lng, p.lat, p.lng) <= NEARBY_SHEET_RADIUS_KM,
+  );
+
+  let items;
+  if (withinRadius.length > 0) {
+    items = withinRadius;
+    nearbySheetTitle.textContent = `Within ${NEARBY_SHEET_RADIUS_KM} km`;
+  } else if (filtered.length > 0) {
+    items = filtered.slice(0, 8);
+    nearbySheetTitle.textContent = `Nothing within ${NEARBY_SHEET_RADIUS_KM} km — here's what's closest`;
+  } else {
+    items = [];
+    nearbySheetTitle.textContent = 'Nothing matches the current filter';
+  }
+
+  nearbySheetList.innerHTML = '';
+  items.forEach((park) => {
+    const li = document.createElement('li');
+    li.className = 'nearby-sheet-row';
+    const dist = distanceKm(userLocation.lat, userLocation.lng, park.lat, park.lng).toFixed(1);
+    li.innerHTML = `
+      <div>
+        <p class="nearby-sheet-row-name">${escapeHtml(park.name)}</p>
+        <p class="nearby-sheet-row-area">${escapeHtml(park.area)}</p>
+      </div>
+      <span class="nearby-sheet-row-distance">${dist} km</span>
+    `;
+    li.addEventListener('click', () => {
+      collapseNearbySheet();
+      selectPark(park.id, true);
+    });
+    nearbySheetList.appendChild(li);
+  });
+}
+
+// Fully expands the sheet — used on every locate button press
+function openNearbySheet() {
+  updateNearbySheet();
+  nearbySheet.classList.remove('peek');
+  nearbySheet.classList.add('open');
+  nearbySheetBackdrop.classList.add('open');
+}
+
+// Collapses to a small visible strip instead of hiding completely, so the sheet stays reachable without needing to press locate button again
+function collapseNearbySheet() {
+  nearbySheet.classList.remove('open');
+  nearbySheet.classList.add('peek');
+  nearbySheetBackdrop.classList.remove('open');
+}
+
+nearbySheetBackdrop.addEventListener('click', collapseNearbySheet);
+// The handle toggles both ways, tap to expand while peeking, tap to collapse while open
+nearbySheetHandle.addEventListener('click', () => {
+  if (nearbySheet.classList.contains('peek')) {
+    openNearbySheet();
+  } else if (nearbySheet.classList.contains('open')) {
+    collapseNearbySheet();
+  }
+});
 
 areaSelect.addEventListener('change', applyFilter);
 

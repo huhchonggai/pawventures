@@ -10,6 +10,7 @@
   --line: #DCE3DA;
   --radius-lg: 18px;
   --radius-md: 12px;
+  --peek-height: 34px; /* Shared with the map controls below, so they stay in sync with the sheet */
 }
 
 * { box-sizing: border-box; }
@@ -418,7 +419,7 @@ body {
 /* Contribute FAB and modal */
 .fab {
   position: fixed;
-  bottom: 24px;
+  bottom: calc(var(--peek-height) + 8px); /* Matches the map controls clearance, so both stay clear of the sheet */
   right: 24px;
   display: flex;
   align-items: center;
@@ -466,8 +467,8 @@ body {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: none;
   background: var(--bg);
@@ -540,6 +541,120 @@ body {
 }
 #contributeStatus.ok { color: var(--primary); }
 #contributeStatus.err { color: var(--accent); }
+
+/* Shifts the locate + zoom controls together, clear of the peeking sheet */
+.leaflet-bottom.leaflet-left {
+  margin-bottom: calc(var(--peek-height) + 8px);
+}
+
+/* Nearby sheet, slides up from the bottom when user uses the locate button */
+.nearby-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 46, 39, 0.45);
+  z-index: 1400;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.nearby-sheet-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nearby-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 70vh;
+  background: var(--surface);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  box-shadow: 0 -8px 24px rgba(31, 46, 39, 0.16);
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateY(100%); /* Off-screen by default — .open slides it up */
+  transition: transform 0.25s ease;
+}
+
+.nearby-sheet.open {
+  transform: translateY(0);
+}
+
+/* Collapsed to a small visible strip showing just the handle bar */
+.nearby-sheet.peek {
+  transform: translateY(calc(100% - var(--peek-height)));
+}
+
+.nearby-sheet-handle {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  margin: 0 auto 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.nearby-sheet-header {
+  margin-bottom: 10px;
+}
+
+.nearby-sheet-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin: 0;
+}
+
+.nearby-sheet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.nearby-sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.nearby-sheet-row:last-child {
+  border-bottom: none;
+}
+
+.nearby-sheet-row:hover {
+  background: var(--accent-light);
+}
+
+.nearby-sheet-row-name {
+  font-weight: 500;
+  font-size: 14px;
+  margin: 0 0 2px;
+}
+
+.nearby-sheet-row-area {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.nearby-sheet-row-distance {
+  font-size: 13px;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
 
 @media (max-width: 720px) {
   .topbar {
@@ -678,5 +793,5 @@ body {
     height: 0px !important;
   }
 
-  .fab { bottom: 16px; right: 16px; }
+  .fab { bottom: calc(var(--peek-height) + 8px); right: 16px; }
 }
