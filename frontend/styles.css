@@ -55,16 +55,16 @@ body {
   font-weight: 500;
 }
 
-.paw-mark {
+/* .paw-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 22px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 75%;
   background: var(--accent-light);
   color: var(--accent);
-}
+} */
 
 .filters {
   display: flex;
