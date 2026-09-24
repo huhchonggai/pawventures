@@ -19,19 +19,26 @@ TLDR, I hope this project is functional and useful while at the same time, using
 
 ## Current features
 
-- Interactive map of Singapore (OneMap Grey basemap) centered on dog parks
-- Custom paw shaped markers with clustering when parks are close together
+- Interactive map of Singapore (OneMap Grey basemap), covering dog parks
+  and dog friendly malls, each with their own marker shape and colour
+- Custom shaped markers with clustering when locations are close together
 - Click a pin for a popup with address, opening hours, tags (fenced,
   off-leash, water points, etc.), a short note, a like button and a
   "Get directions" link that opens up Google Maps
 - A "community approved" star badge appears on a location's popup once it
   passes 10 likes
-- Filter by area (eg, Bishan, Jurong, Toa Payoh)
+- Filter by category (Parks, Malls while Cafes and Vets are still coming) and
+  by area (eg, Bishan, Jurong, Toa Payoh)
 - A "locate me" button on the map finds the user's current position via the
-  browser's geolocation API and drops a red pin there. Pins within a
-  configurable radius then get their own label showing name and distance, with no click or hover needed to see it. 
-  Location is computed entirely in the browser (straight line distance via the
-  haversine formula). It is never sent to the backend
+  browser's geolocation API and drops a pin there. The pin is draggable, so
+  GPS drift can be corrected by hand. The map auto pans if it is dragged
+  near the edge of the screen. Nearby pins pick up their own label showing
+  name and distance, with no click or hover needed to see it. A bottom
+  sheet also slides up listing what is nearby across whatever categories are
+  active and can be collapsed to a small "peeking strip" rather than closed, 
+  so it stays within reach. Location is computed entirely in the
+  browser (straight line distance via the haversine formula, interesting stuff). It is never
+  sent to the backend
 - A floating "Contribute" button opens a form for suggesting a new
   location. It can be anonymous or with a name, no login required
 - A small backend API (Node + Express + SQLite) backs the map, the like
@@ -47,7 +54,7 @@ TLDR, I hope this project is functional and useful while at the same time, using
 
 Roughly in the order I am planning to tackle them,
 
-- [ ] Additional categories: pet friendly cafes/restaurants, malls, vets
+- [ ] Additional categories: pet friendly cafes/restaurants, vets
       (filter pills for these already exist in the UI, marked "coming soon")
 - [ ] A way to promote an approved contribution straight into a live
       location, instead of manually re-entering it through the admin form
@@ -69,9 +76,10 @@ pawventures/
 ├── backend/
 │   ├── server.js              # Express app — serves the API and the frontend
 │   ├── db.js                  # SQLite connection + schema
-│   ├── seed.js                # imports seed-data/parks.json into the database
+│   ├── seed.js                # imports seed-data/*.json into the database
 │   ├── seed-data/
-│   │   └── parks.json         # bulk location data — see field guide below
+│   │   ├── parks.json         # bulk park data — see field guide below
+│   │   └── malls.json         # bulk mall data — same field guide applies
 │   ├── data/                  # the live SQLite database (gitignored)
 │   ├── routes/
 │   │   ├── locations.js       # GET /api/locations, POST /:id/like
@@ -92,7 +100,7 @@ pawventures/
 
 | I want to... | Edit this |
 |---|---|
-| Add several parks at once | `backend/seed-data/parks.json`, then run `npm run seed` — see below |
+| Add several locations at once | `backend/seed-data/parks.json` or `malls.json`, then run `npm run seed` — see below |
 | Add or edit a single location | The admin page (`/admin.html`) — "Add a location" form |
 | Change the page title (browser tab text) | `<title>` tag in `frontend/index.html` |
 | Change the header logo or text | `.wordmark` block in `frontend/index.html`, image in `frontend/logo/` |
@@ -101,15 +109,20 @@ pawventures/
 | Change the color palette / fonts | `:root` CSS variables at the top of `frontend/styles.css` |
 | Add a new area to the filter dropdown | Nothing to edit manually — it's generated automatically from whatever `area` values exist in the database |
 | Change the map's basemap style | The OneMap tile URL in `frontend/app.js` (options: Default, Original, Grey, GreyLite, Night) |
-| Change how far the "nearby" distance labels reach | `NEARBY_LABEL_RADIUS_KM` in `frontend/app.js` |
+| Change how far the permanent "nearby" distance labels reach | `NEARBY_LABEL_RADIUS_KM` in `frontend/app.js` |
+| Change how far the nearby sheet's list searches before falling back to "closest anyway" | `NEARBY_SHEET_RADIUS_KM` in `frontend/app.js` |
+| Change how far the "you are here" pin auto-pans while dragged | `autoPanSpeed` / `autoPanPadding` on the marker in `frontend/app.js` |
+| Change how much of the nearby sheet peeks out when collapsed | `--peek-height` in `frontend/styles.css` (also keeps the zoom/locate controls and Contribute button clear of it automatically) |
 | Change rate limits for contributions/likes | `backend/ratelimiters/ratelimiters.js` |
 | Change the admin password | `ADMIN_KEY` in `backend/.env` (never commit the real value) |
 
-### `seed-data/parks.json` field guide
+### `seed-data/*.json` field guide
 
-This file is only read once, by `seed.js`, to bulk-import locations into
-the database. It's safe to re-run `npm run seed` any time — existing
-entries (matched by `id`) are left alone, only new ones get added.
+Both `parks.json` and `malls.json` are only read once each, by `seed.js`,
+to bulk-import locations into the database. It's safe to re-run
+`npm run seed` any time — matching entries (by `id`) get their fields
+synced to whatever's currently in the JSON, so edits there do carry
+through on re-seed, not just new additions.
 
 | Field | What it controls |
 |---|---|
@@ -131,7 +144,7 @@ Unlike the very first version of this project, the frontend is now served
 cd backend
 npm install
 copy .env.example .env    # then edit .env and set your own ADMIN_KEY
-npm run seed              # imports seed-data/parks.json into the database
+npm run seed              # imports seed-data/*.json into the database
 npm start
 ```
 
@@ -149,11 +162,16 @@ quick manual pass covers it for now,
 - [ ] Map loads, centered on Singapore, with no blank space at any zoom level
 - [ ] All expected pins appear, correctly clustered when zoomed out
 - [ ] Clicking a pin opens its popup with correct details
-- [ ] Area filter narrows the pins shown correctly
+- [ ] Category and area filters narrow the pins shown correctly, together
 - [ ] The like button increments the count and shows the star badge past 10 likes
 - [ ] "Get directions" opens Google Maps at the right coordinates, with the correct button color
-- [ ] The locate button drops a "you are here" pin and nearby pins pick up
-      a distance label (requires allowing location access when prompted)
+- [ ] The locate button drops a "you are here" pin, nearby pins pick up a
+      distance label and the nearby sheet slides up (requires allowing
+      location access when prompted)
+- [ ] Dragging the "you are here" pin updates distances/sorting, and
+      auto-pans the map when dragged near the screen edge
+- [ ] The nearby sheet can be collapsed to a peek strip and re-expanded by
+      tapping its handle, without needing to press locate again
 - [ ] The contribute form submits successfully and the entry shows up in the admin page
 - [ ] The admin page correctly rejects a wrong admin key
 - [ ] Browser console is free of errors (right-click → Inspect → Console)
