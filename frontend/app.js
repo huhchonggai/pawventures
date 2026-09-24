@@ -76,18 +76,23 @@ const LocateControl = L.Control.extend({
           if (userLocationMarker) {
             userLocationMarker.setLatLng([latitude, longitude]);
           } else {
-            userLocationMarker = L.marker([latitude, longitude], { icon: userLocationIcon, draggable: true }).addTo(map);
+            userLocationMarker = L.marker([latitude, longitude], {
+              icon: userLocationIcon,
+              draggable: true,
+              autoPan: true, // Pans the map automatically when the marker is dragged near the edge or border of screen
+              autoPanSpeed: 12, // Higher is faster
+            }).addTo(map);
             userLocationMarker.bindTooltip('You are here', {
               permanent: true,
               direction: 'top',
               offset: [0, -28],
               className: 'you-are-here-label',
             });
-            // Allow user to drag the pin to where they actually are or want to be at
+            // Lets someone correct GPS drift by dragging the pin to where they actually are
             userLocationMarker.on('dragend', () => {
               const { lat, lng } = userLocationMarker.getLatLng();
               userLocation = { lat, lng };
-              applyFilter();
+              applyFilter(); // No map.setView here — re-centering would fight the drag the user just made
             });
           }
 
