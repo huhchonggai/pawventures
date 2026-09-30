@@ -68,6 +68,8 @@ function setUserLocation(lat, lng, { pan = true, tooltip = 'Walkies start here!'
     userLocationMarker.on('dragend', () => {
       const { lat: dLat, lng: dLng } = userLocationMarker.getLatLng();
       userLocation = { lat: dLat, lng: dLng };
+      // Once pin is dragged to a specific location, treat it as a search result
+      userLocationMarker.setTooltipContent('Sniff spot found!');
       applyFilter(); // No map.setView here. Recentering would fight the drag the user just made
     });
   }
