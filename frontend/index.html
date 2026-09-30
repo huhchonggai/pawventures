@@ -17,41 +17,33 @@
 </head>
 <body>
 
+<!-- Search bar + logo + filter icon + category tabs, one floating card at every screen size -->
 <header class="topbar">
-  <div class="wordmark">
-    <span class="paw-mark" aria-hidden="true">
-      <img src="logo/miaava.png" width="45" height="45" style="border-radius:50%">
-    </span>
-    PawLah <span class="wordmark-sub">SG</span>
+  <div class="search-bar" id="searchBar">
+    <img src="logo/miaava.png" class="search-logo" alt="" aria-hidden="true">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search address or postal code" autocomplete="off">
+    <div class="area-select-icon-wrap" id="areaSelectIconWrap">
+      <svg class="area-select-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg>
+      <select class="area-select" aria-label="Filter by area" id="areaSelect">
+        <option value="">All areas</option>
+      </select>
+    </div>
   </div>
 
-  <div class="filters-wrap">
-    <nav class="filters" id="filtersNav" aria-label="Category filters">
-      <button class="pill active" data-filter="parks" title="Parks" aria-label="Parks">
-        <span class="pill-label">Parks</span>
-      </button>
-      <button class="pill" data-filter="malls" title="Malls" aria-label="Malls">
-        <span class="pill-label">Malls</span>
-      </button>
-      <button class="pill" data-filter="cafes" disabled title="Cafes — coming soon" aria-label="Cafes">
-        <span class="pill-label">Cafes</span>
-      </button>
-      <button class="pill" data-filter="vets" disabled title="Vets — coming soon" aria-label="Vets">
-        <span class="pill-label">Vets</span>
-      </button>
-    </nav>
-    <button class="filters-scroll-arrow" id="filtersScrollArrow" aria-label="Show more categories" hidden>
-      <svg viewBox="0 0 24 24" width="14" height="14"><use href="#arrow-icon"></use></svg>
+  <nav class="filters" id="filtersNav" aria-label="Category filters">
+    <button class="pill active" data-filter="parks" title="Parks" aria-label="Parks">
+      <span class="pill-label">Parks</span>
     </button>
-  </div>
-
-  <div class="area-select-wrap" id="areaSelectWrap">
-    <svg class="area-select-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="#filter-icon"></use></svg>
-    <span class="area-filter-dot" id="areaFilterDot" hidden></span>
-    <select class="area-select" aria-label="Filter by area" id="areaSelect">
-      <option value="">All areas</option>
-    </select>
-  </div>
+    <button class="pill" data-filter="malls" title="Malls" aria-label="Malls">
+      <span class="pill-label">Malls</span>
+    </button>
+    <button class="pill" data-filter="eats" title="Eats" aria-label="Eats">
+      <span class="pill-label">Eats</span>
+    </button>
+    <button class="pill" data-filter="vets" disabled title="Vets — coming soon" aria-label="Vets">
+      <span class="pill-label">Vets</span>
+    </button>
+  </nav>
 </header>
 
 <main class="layout">
@@ -110,19 +102,18 @@
   <ul class="nearby-sheet-list" id="nearbySheetList"></ul>
 </div>
 
+<!-- Required OneMap credit pinned to the bottom of page, only applicable to desktop version -->
+<div class="map-attribution" id="mapAttribution">
+  <img src="https://www.onemap.gov.sg/web-assets/images/logo/om_logo_round@2x.png" alt="">
+  OneMap | Map data © contributors, Singapore Land Authority
+</div>
+
 <!-- Shared icon sprite -->
 <svg width="0" height="0" style="position:absolute">
   <defs>
     <g id="close-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
       <line x1="5" y1="5" x2="19" y2="19"/>
       <line x1="19" y1="5" x2="5" y2="19"/>
-    </g>
-    <g id="arrow-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="4" y1="12" x2="20" y2="12"/>
-      <polyline points="13 5 20 12 13 19"/>
-    </g>
-    <g id="filter-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 5h16l-6 7v6l-4 2v-8z"/>
     </g>
   </defs>
 </svg>

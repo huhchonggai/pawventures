@@ -49,4 +49,13 @@ try {
   if (!/duplicate column/i.test(err.message)) throw err;
 }
 
+// Tracks whether a row came from a seed file or POST /admin/locations, so seed.js only ever
+// prunes rows it owns. Pre-existing admin-added rows default to 'seed' here — relabel any with:
+// UPDATE locations SET source = 'admin' WHERE id = '...';
+try {
+  db.exec("ALTER TABLE locations ADD COLUMN source TEXT NOT NULL DEFAULT 'seed';");
+} catch (err) {
+  if (!/duplicate column/i.test(err.message)) throw err;
+}
+
 module.exports = db;

@@ -1,5 +1,6 @@
 const LEAF_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20"/><path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13"/></svg>';
 const BAG_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(12,12)"><rect x="-7" y="-4" width="14" height="13" rx="1"/><path d="M-3-4a3 5 0 016 0"/></g></svg>';
+const FORK_KNIFE_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
 
 const singaporeBounds = L.latLngBounds(
   L.latLng(1.15, 103.55), // This is the southwest corner, with a small buffer around the mainland
@@ -7,14 +8,14 @@ const singaporeBounds = L.latLngBounds(
 );
 
 const map = L.map('map', {
-  zoomControl: false, // Added manually below, moved to bottom left so it doesn't sit under the floating topbar on mobile.
-  attributionControl: false, // Also added manually below. Grouped with zoom and without Leaflet's own default credit.
+  zoomControl: false, // Added manually below, grouped with the locate button
+  attributionControl: false, // OneMap credit lives in the static footer bar instead, see #mapAttribution
   minZoom: 13,
   maxBounds: singaporeBounds,
-  maxBoundsViscosity: 1.0, // A value of 1.0 creates a hard stop at the boundary, with no rubber banding past it
+  maxBoundsViscosity: 1.0, // A value of 1.0 creates a hard stop at the boundary
 }).setView([1.3521, 103.8198], 12);
 
-L.control.zoom({ position: 'bottomleft' }).addTo(map);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
 
 // Icon for the locate button
 const LOCATE_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="7"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>';
@@ -32,7 +33,7 @@ const userLocationIcon = L.divIcon({
 
 // Refetches the user's position fresh on every click, rather than tracking it live
 let userLocationMarker = null;
-let userLocation = null; // { lat, lng } — set once located, used for distance display and sorting
+let userLocation = null; // { lat, lng }, set once located, used for distance display and sorting
 const NEARBY_LABEL_RADIUS_KM = 30; // Only pins within this range get a permanent distance label on the map
 
 // Straight line distance in km between two lat/lng points, learnt about haversine formula, interesting
@@ -45,8 +46,44 @@ function distanceKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Creates or moves the "you are here" pin. Used by the locate button, drag correction and address search
+function setUserLocation(lat, lng, { pan = true, tooltip = 'Walkies start here!' } = {}) {
+  if (userLocationMarker) {
+    userLocationMarker.setLatLng([lat, lng]);
+    userLocationMarker.setTooltipContent(tooltip);
+  } else {
+    userLocationMarker = L.marker([lat, lng], {
+      icon: userLocationIcon,
+      draggable: true,
+      autoPan: true, // Pans the map automatically when the marker is dragged near the edge or border of screen
+      autoPanSpeed: 12, // Higher is faster
+    }).addTo(map);
+    userLocationMarker.bindTooltip(tooltip, {
+      permanent: true,
+      direction: 'top',
+      offset: [0, -28],
+      className: 'you-are-here-label',
+    });
+    // Let someone correct GPS drift by dragging the pin to where they actually are
+    userLocationMarker.on('dragend', () => {
+      const { lat: dLat, lng: dLng } = userLocationMarker.getLatLng();
+      userLocation = { lat: dLat, lng: dLng };
+      applyFilter(); // No map.setView here. Recentering would fight the drag the user just made
+    });
+  }
+
+  userLocation = { lat, lng };
+  applyFilter();
+  openNearbySheet();
+  if (pan) map.setView([lat, lng], 15);
+
+  // Clears the search bar and closes the results dropdown after setting a location
+  searchInput.value = '';
+  clearSearchResults();
+}
+
 const LocateControl = L.Control.extend({
-  options: { position: 'bottomleft' },
+  options: { position: 'bottomright' },
   onAdd: function () {
     // Reuses Leaflet's own control classes, so this matches zoom's size and shadow exactly
     const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control locate-btn');
@@ -72,36 +109,7 @@ const LocateControl = L.Control.extend({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-
-          if (userLocationMarker) {
-            userLocationMarker.setLatLng([latitude, longitude]);
-          } else {
-            userLocationMarker = L.marker([latitude, longitude], {
-              icon: userLocationIcon,
-              draggable: true,
-              autoPan: true, // Pans the map automatically when the marker is dragged near the edge or border of screen
-              autoPanSpeed: 12, // Higher is faster
-            }).addTo(map);
-            userLocationMarker.bindTooltip('You are here', {
-              permanent: true,
-              direction: 'top',
-              offset: [0, -28],
-              className: 'you-are-here-label',
-            });
-            // Lets someone correct GPS drift by dragging the pin to where they actually are
-            userLocationMarker.on('dragend', () => {
-              const { lat, lng } = userLocationMarker.getLatLng();
-              userLocation = { lat, lng };
-              applyFilter(); // No map.setView here — re-centering would fight the drag the user just made
-            });
-          }
-
-          // Now that a live location exists, refresh the list/markers so distances and sorting appear
-          userLocation = { lat: latitude, lng: longitude };
-          applyFilter();
-          openNearbySheet();
-
-          map.setView([latitude, longitude], 15);
+          setUserLocation(latitude, longitude);
           link.classList.remove('leaflet-disabled');
         },
         (err) => {
@@ -118,18 +126,14 @@ const LocateControl = L.Control.extend({
 
 map.addControl(new LocateControl());
 
-// Removes Leaflet's own credit, but keeps OneMap's
-L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
-
 // OneMap offers several basemap styles (Default, Original, Grey, GreyLite and Night)
 L.tileLayer('https://www.onemap.gov.sg/maps/tiles/Grey/{z}/{x}/{y}.png', {
   detectRetina: true,
   maxZoom: 19,
   minZoom: 13, // This matches the map's own minZoom above, so this number never actually takes effect
-  attribution: '<img src="https://www.onemap.gov.sg/web-assets/images/logo/om_logo_round@2x.png" style="height:14px;vertical-align:middle;margin-right:4px"> OneMap | Map data &copy; contributors, Singapore Land Authority',
 }).addTo(map);
 
-// One icon per category — the color itself comes from CSS (.paw-pin vs .paw-pin.mall)
+// One icon per category, the color itself comes from CSS (.paw-pin vs .paw-pin.mall vs .paw-pin.eat)
 const pawIconsByCategory = {
   park: L.divIcon({
     className: '',
@@ -141,6 +145,13 @@ const pawIconsByCategory = {
   mall: L.divIcon({
     className: '',
     html: `<div class="paw-pin mall">${BAG_SVG}</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 30],
+    popupAnchor: [0, -30],
+  }),
+  eat: L.divIcon({
+    className: '',
+    html: `<div class="paw-pin eat">${FORK_KNIFE_SVG}</div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 30],
     popupAnchor: [0, -30],
@@ -158,9 +169,7 @@ const clusterGroup = L.markerClusterGroup({
 
 const listEl = document.getElementById('parkList');
 const areaSelect = document.getElementById('areaSelect');
-const areaFilterDot = document.getElementById('areaFilterDot');
-const filtersNav = document.getElementById('filtersNav');
-const filtersScrollArrow = document.getElementById('filtersScrollArrow');
+const searchBar = document.getElementById('searchBar');
 const nearbySheetBackdrop = document.getElementById('nearbySheetBackdrop');
 const nearbySheet = document.getElementById('nearbySheet');
 const nearbySheetTitle = document.getElementById('nearbySheetTitle');
@@ -172,7 +181,7 @@ let parks = []; // Holds every fetched location, of any category. Name is a hold
 let selectedId = null;
 
 // Maps each pill's data filter value to the category string the backend actually uses
-const CATEGORY_MAP = { parks: 'park', malls: 'mall', cafes: 'cafe', vets: 'vet' };
+const CATEGORY_MAP = { parks: 'park', malls: 'mall', eats: 'eat', vets: 'vet' };
 const selectedCategories = new Set(['park']); // Starts with only Parks shown, matching the pill that's active by default
 
 // Toggles a category in or out of the current selection when its pill is clicked
@@ -192,30 +201,12 @@ categoryPills.forEach((pill) => {
   });
 });
 
-// Shows the arrow only when categories overflow the visible width
-// Stays hidden today and is only activated once more are added
-function updateFiltersArrow() {
-  if (!filtersNav || !filtersScrollArrow) return;
-  const hasOverflow = filtersNav.scrollWidth > filtersNav.clientWidth + 4;
-  const nearEnd = filtersNav.scrollLeft + filtersNav.clientWidth >= filtersNav.scrollWidth - 4;
-  filtersScrollArrow.hidden = !hasOverflow || nearEnd;
-}
-
-if (filtersNav && filtersScrollArrow) {
-  filtersScrollArrow.addEventListener('click', () => {
-    filtersNav.scrollBy({ left: 100, behavior: 'smooth' });
-  });
-  filtersNav.addEventListener('scroll', updateFiltersArrow);
-  window.addEventListener('resize', updateFiltersArrow);
-  updateFiltersArrow();
-}
-
+// Categories are now always visible and tabs are evenly spaced. No overflow scroll needed
 function directionsUrl(park) {
   return `https://www.google.com/maps/dir/?api=1&destination=${park.lat},${park.lng}`;
 }
 
-// This tracks which locations this browser has liked, so the button greys out after clicking
-// Only affects the browser, since clearing localStorage would reset it
+// Tracks which locations this browser has liked, so the like button greys out. Stored per browser only
 function getLikedSet() {
   try {
     return new Set(JSON.parse(localStorage.getItem('pawventures_liked') || '[]'));
@@ -369,17 +360,13 @@ function applyFilter() {
   const filtered = currentFilteredList();
   renderList(filtered);
   renderMarkers(filtered);
-  // Shows a dot on the mobile filter icon when a specific area is active
-  // Area name itself is not visible once it is collapsed to just an icon
-  if (areaFilterDot) areaFilterDot.hidden = !areaSelect.value;
-  // Keeps the sheet's content fresh even while collapsed, so it's up to date whenever reopened
+  // Keeps the sheet's content fresh even while collapsed, so it is up to date whenever reopened
   if (userLocation) updateNearbySheet();
 }
 
-// Rebuilds the sheet's list — everything within NEARBY_SHEET_RADIUS_KM, or if there's
-// genuinely nothing that close, the nearest handful regardless of distance instead
+// Rebuilds the sheet's list, everything within NEARBY_SHEET_RADIUS_KM, or if there are genuinely nothing that close, show what are the next best options
 function updateNearbySheet() {
-  const filtered = currentFilteredList(); // Already sorted nearest-first once userLocation is set
+  const filtered = currentFilteredList(); // Already sorted nearest first once userLocation is set
   const withinRadius = filtered.filter(
     (p) => distanceKm(userLocation.lat, userLocation.lng, p.lat, p.lng) <= NEARBY_SHEET_RADIUS_KM,
   );
@@ -416,7 +403,7 @@ function updateNearbySheet() {
   });
 }
 
-// Fully expands the sheet — used on every locate button press
+// Fully expands the sheet. Used on every locate button press
 function openNearbySheet() {
   updateNearbySheet();
   nearbySheet.classList.remove('peek');
@@ -442,6 +429,84 @@ nearbySheetHandle.addEventListener('click', () => {
 });
 
 areaSelect.addEventListener('change', applyFilter);
+
+// Address / postal code search (OneMap). Strips "Blk"/"Block" first, their index omits it
+// Picking a result moves the same "you are here" pin the locate button uses
+const searchInput = document.getElementById('searchInput');
+let searchResultsEl = null;
+let searchDebounceTimer = null;
+
+function ensureSearchResultsEl() {
+  if (searchResultsEl) return searchResultsEl;
+  searchResultsEl = document.createElement('ul');
+  searchResultsEl.className = 'search-results';
+  searchBar.appendChild(searchResultsEl);
+  return searchResultsEl;
+}
+
+// Removes the dropdown entirely, an empty <ul> would still show as a blank box
+function clearSearchResults() {
+  if (!searchResultsEl) return;
+  searchResultsEl.remove();
+  searchResultsEl = null;
+}
+
+function renderSearchResults(results) {
+  clearSearchResults();
+  const resultsEl = ensureSearchResultsEl();
+
+  if (results.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'search-result-empty';
+    li.textContent = 'No matches found';
+    resultsEl.appendChild(li);
+    return;
+  }
+
+  results.forEach((r) => {
+    const li = document.createElement('li');
+    li.className = 'search-result';
+    li.textContent = r.SEARCHVAL || r.ADDRESS;
+    li.addEventListener('click', () => {
+      const lat = parseFloat(r.LATITUDE);
+      const lng = parseFloat(r.LONGITUDE);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      setUserLocation(lat, lng, { tooltip: 'Sniff spot found!' });
+    });
+    resultsEl.appendChild(li);
+  });
+}
+
+async function runAddressSearch(query) {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) {
+    clearSearchResults();
+    return;
+  }
+
+  const cleaned = trimmed.replace(/^(blk|block)\.?\s+/i, '');
+  const url = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${encodeURIComponent(cleaned)}&returnGeom=Y&getAddrDetails=Y&pageNum=1`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    renderSearchResults((data.results || []).slice(0, 6));
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchDebounceTimer);
+  const value = searchInput.value;
+  searchDebounceTimer = setTimeout(() => runAddressSearch(value), 300);
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-bar')) {
+    clearSearchResults();
+  }
+});
 
 // This used to read data/parks.json directly. However, it now fetches live from the backend API
 // This is a relative path, so it works both locally and once deployed.

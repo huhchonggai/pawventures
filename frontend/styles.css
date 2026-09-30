@@ -10,7 +10,7 @@
   --line: #DCE3DA;
   --radius-lg: 18px;
   --radius-md: 12px;
-  --peek-height: 34px; /* Shared with the map controls below, so they stay in sync with the sheet */
+  --peek-height: 34px; /* Height of the collapsed sheet that shows nearby locations */
 }
 
 * { box-sizing: border-box; }
@@ -18,7 +18,7 @@
 html, body {
   margin: 0;
   height: 100%;
-  height: 100dvh; /* Tracks the real visible height on mobile browsers with a dynamic address bar */
+  height: 100dvh; /* Keeps the height accurate on mobile browsers, where the address bar can show or hide */
   background: var(--bg);
   color: var(--ink);
   font-family: 'Inter', -apple-system, sans-serif;
@@ -29,67 +29,52 @@ body {
   flex-direction: column;
 }
 
-/* Top bar */
+/* Floating header card, search bar + filter icon, sitting above the category tabs */
 .topbar {
+  position: fixed;
+  top: calc(14px + env(safe-area-inset-top)); /* Gap from the top of the screen. Increase it to move the card down */
+  left: 50%;
+  transform: translateX(-50%); /* Keeps the card centered horizontally */
+  z-index: 1000; /* Keeps the card drawn above the map, which has no z-index of its own */
+  width: min(480px, calc(100% - 32px)); /* Sets the card's width, up to a maximum of 480px */
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 12px 28px;
+  flex-direction: column;
+  gap: 6px; /* Space between the search row and the tabs row below it. */
+  padding: 10px 12px; /* Gives 10px of space top and bottom and 12px left and right, inside the card */
   background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(31, 46, 39, 0.15);
 }
-
-.wordmark {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'Fraunces', serif;
-  font-weight: 600;
-  font-size: 18px;
-  color: var(--primary-dark);
-  white-space: nowrap;
-}
-
-.wordmark-sub {
-  color: var(--accent);
-  font-weight: 500;
-}
-
-/* .paw-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 75%;
-  background: var(--accent-light);
-  color: var(--accent);
-} */
 
 .filters {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 4px; /* Space between each category tab */
 }
 
 .pill {
+  flex: 1;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
-  padding: 7px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  padding: 6px 4px 8px; /* Gives 6px on top, 4px left and right and 8px on the bottom, inside each tab */
+  border: none;
+  border-bottom: 2px solid transparent; /* Becomes colored when tab is active, see .pill.active below */
+  border-radius: 0;
+  background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .pill.active {
-  background: var(--accent);
-  border-color: #fff;
-  color: #fff;
+  color: var(--accent);
+  border-bottom-color: var(--accent); /* Draws the active tab's underline */
 }
 
 .pill:disabled {
@@ -97,39 +82,99 @@ body {
   cursor: default;
 }
 
-.area-select-wrap {
-  margin-left: auto;
-  margin-right: -10px;
+/* Search bar row, the logo + the address input + the filter icon, side by side */
+.search-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: var(--ink-muted);
+  gap: 10px; /* Space between the logo, the input and the filter icon */
+  width: 100%;
+  padding: 0 6px 0 8px; /* Gives 0 on top, 6px on the right, 0 on the bottom and 8px on the left (before the logo) */
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.search-logo {
+  flex-shrink: 0; /* Stops the logo from shrinking when the typed text gets long */
+  width: 26px; /* Sets the logo's size */
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.search-input {
+  flex: 1; /* Allows the input grow to fill the space between the logo and the filter icon */
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 10px 0; /* Gives 10px of space above and below the typed text and none on the sides */
+}
+
+/* Filter icon here is purely decorative. Actual clickable dropdown is .area-select, sitting directly on top of the icon, so a tap here always lands on the dropdown */
+.area-select-icon-wrap {
   position: relative;
-}
-
-.area-select-icon {
-  display: none; /* Shown only on mobile mode */
-}
-
-.area-filter-dot {
-  display: none; /* Shown only on mobile mode */
+  flex-shrink: 0;
+  width: 36px; /* Sets the tap target size for the filter icon */
+  height: 36px;
+  margin-right: -4px; /* Pulls the icon flush against the card's edge */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  border-left: 1px solid var(--line);
 }
 
 .area-select {
-  font-family: inherit;
-  font-size: 13px;
-  padding: 8px 28px 8px 14px;
-  border-radius: var(--radius-md);
+  position: absolute;
+  inset: 0; /* Stretches the dropdown to fill the icon box completely */
+  opacity: 0; /* Makes the dropdown invisible, although still clickable */
+  border: none;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Search results list, appears below the search bar once you type */
+.search-results {
+  position: absolute;
+  top: calc(100% + 6px); /* Sits just below the search bar */
+  left: 0;
+  right: 0; /* Makes the list exactly as wide as the search bar */
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
   border: 1px solid var(--line);
-  background-color: var(--surface);
-  color: var(--ink);
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B62' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 14px 14px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(31, 46, 39, 0.16);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 1300; /* Higher than the header card's 1000, so the results draw on top of it */
+}
+
+.search-result,
+.search-result-empty {
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.search-result {
+  cursor: pointer;
+}
+
+.search-result:hover {
+  background: var(--accent-light);
+}
+
+.search-result-empty {
+  color: var(--ink-muted);
 }
 
 /* Layout */
@@ -185,27 +230,23 @@ body {
   margin: 2px 0 0;
 }
 
-/* Map panel */
+/* Map fills the whole screen. The header floats on top of it */
 .map-panel {
   position: relative;
   flex: 1;
-  padding: 18px;
 }
 
 #map {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 1px solid var(--line);
 }
 
-/* Boosts saturation on the Grey basemap so it does not look too flat */
+/* Increase saturation on the Grey basemap, so it does not look too flat */
 .leaflet-tile-pane {
   filter: saturate(1.1) contrast(1.02);
 }
 
-/* Custom paw marker — green is the default (parks); .mall overrides it to orange */
+/* Custom paw marker. Green is the default for parks, .mall below overrides it to orange */
 .paw-pin {
   width: 44px;
   height: 44px;
@@ -221,6 +262,10 @@ body {
 
 .paw-pin.mall {
   background: #eec12e;
+}
+
+.paw-pin.eat {
+  background: #f77809;
 }
 
 .paw-pin.you-are-here {
@@ -279,7 +324,7 @@ body {
   padding: 2px 8px;
 }
 
-/* Detail popup. Anchored to the clicked pin */
+/* Information popup, anchored to whichever pin was clicked */
 .park-popup .leaflet-popup-content-wrapper {
   border-radius: var(--radius-lg);
   border: 1px solid var(--line);
@@ -344,11 +389,11 @@ body {
 .detail-hours {
   font-size: 13px;
   margin: 0 0 10px;
-}
-
-.detail-hours::before {
-  content: "Open ";
-  color: var(--ink-muted);
+  /* Hours strings from the data can contain "\n" between day groups
+     (e.g. "Sun - Thurs: 11.30am - 12.00am\nFri - Sat: 11.30am - 01.00am").
+     pre-line keeps those as separate lines while still collapsing any
+     other runs of whitespace, and still wraps normally within a line. */
+  white-space: pre-line;
 }
 
 .detail-note {
@@ -360,7 +405,7 @@ body {
   margin: 0 0 16px;
 }
 
-/* This selector is more specific than Leaflet's own popup link styling, which otherwise overrides the color set below. */
+/* Required to override Leaflet's own default popup link color */
 .park-popup .leaflet-popup-content a.detail-directions {
   display: inline-flex;
   align-items: center;
@@ -416,11 +461,11 @@ body {
   color: var(--accent);
 }
 
-/* Contribute FAB and modal */
+/* Contribute button and its modal form */
 .fab {
   position: fixed;
-  bottom: calc(var(--peek-height) + 8px); /* Matches the map controls clearance, so both stay clear of the sheet */
-  right: 24px;
+  bottom: calc(var(--peek-height) + 6px); /* Gap from the bottom of the screen. Increase it to move the button up */
+  left: 18px; /* Gap from the left edge. Increase it to move the button right or swap to "right: 24px" to anchor it on the right instead */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -434,7 +479,7 @@ body {
   font-weight: 500;
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(31, 46, 39, 0.25);
-  z-index: 1000;
+  z-index: 1000; /* Puts the button on the same layer as the header card, both above the map */
 }
 
 .modal-overlay {
@@ -444,12 +489,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 2000; /* Higher than everything else, so the modal always sits on top */
   padding: 20px;
 }
 
 .modal-overlay[hidden] {
-  display: none; /* This rule is required, or the display:flex above would override the hidden attribute. */
+  display: none; /* This is needed, otherwise the display:flex above would override the hidden attribute */
 }
 
 .modal-card {
@@ -542,17 +587,53 @@ body {
 #contributeStatus.ok { color: var(--primary); }
 #contributeStatus.err { color: var(--accent); }
 
-/* Shifts the locate + zoom controls together, clear of the peeking sheet */
-.leaflet-bottom.leaflet-left {
-  margin-bottom: calc(var(--peek-height) + 8px);
+/* Groups the zoom buttons and the locate button together, in the map's bottom right corner */
+.leaflet-bottom.leaflet-right {
+  margin-bottom: calc(var(--peek-height) + 2px); /* Gap from the bottom of the screen. Increase it to move the buttons up */
+  margin-right: 12px; /* Gap from the right edge. Increase it to move the buttons left */
 }
 
-/* Nearby sheet, slides up from the bottom when user uses the locate button */
+/* This sizes the buttons up from Leaflet's small default to match the FAB's shadow style */
+.leaflet-right .leaflet-bar {
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 16px rgba(31, 46, 39, 0.16);
+}
+
+.leaflet-right .leaflet-bar a {
+  width: 34px; /* Button sizes, for both zoom in and out and locate button */
+  height: 34px;
+  line-height: 34px;
+}
+
+/* Required OneMap credit strip, pinned along the bottom of the page */
+.map-attribution {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0; /* Keeps the bar flush against the bottom edge. Increase it to lift the bar up off the edge */
+  z-index: 900; /* Keeps the bar under the FAB and the zoom/locate buttons, which use 1000 */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centers the credit text. Swap to flex-start or flex-end to move it to one side */
+  gap: 6px;
+  padding: 4px 0;
+  /* White tint over the grey map underneath is what gives the "grey rectangle" look. Raise it towards 1 for a more solid white bar or lower it towards 0 to let more of the map show through */
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.map-attribution img {
+  height: 14px;
+}
+
+/* Nearby location sheet, slides up from the bottom after the locate button is used */
 .nearby-sheet-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(31, 46, 39, 0.45);
-  z-index: 1400;
+  z-index: 1400; /* Sets above the header and the FAB, so the dark overlay covers them too */
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
@@ -573,12 +654,12 @@ body {
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
   box-shadow: 0 -8px 24px rgba(31, 46, 39, 0.16);
-  z-index: 1500;
+  z-index: 1500; /* One layer above its own backdrop (1400), so the sheet draws on top of the dimmed background */
   display: flex;
   flex-direction: column;
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  transform: translateY(100%); /* Off-screen by default — .open slides it up */
+  transform: translateY(100%); /* Keeps the sheet off screen by default. The .open class below slides it up */
   transition: transform 0.25s ease;
 }
 
@@ -586,7 +667,7 @@ body {
   transform: translateY(0);
 }
 
-/* Collapsed to a small visible strip showing just the handle bar */
+/* Collapses the sheet down to a small visible strip, showing just the handle bar */
 .nearby-sheet.peek {
   transform: translateY(calc(100% - var(--peek-height)));
 }
@@ -656,142 +737,24 @@ body {
   flex-shrink: 0;
 }
 
+/* Mobile overrides. These only apply on screens 720px wide or narrower and only change position and size. Colors and fonts stay the same as the shared styles above */
 @media (max-width: 720px) {
+  /* Same header card as desktop, just stretched edge to edge instead of centered, with a lesser space above it */
   .topbar {
-    position: fixed;
     top: calc(12px + env(safe-area-inset-top));
     left: 12px;
     right: 12px;
-    z-index: 1000;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
-    box-shadow: 0 4px 16px rgba(31, 46, 39, 0.15);
+    transform: none; /* Not needed once left and right are both set */
+    width: auto; /* Let left and right decide the width instead */
   }
 
-  .wordmark {
-    order: 1;
-    flex-basis: 0%;
-  }
-
-  .area-select-wrap {
-    order: 2;
-    margin-left: auto;
-    margin-right: 4px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .filters-wrap {
-    order: 3;
-    flex-basis: 100%;
-    position: relative;
-    margin-top: 4px;
-  }
-
-  .pill {
-    flex: 1;
-    height: 32px;
-    padding: 0 8px;
-    font-size: 13px;
-    white-space: nowrap;
-    justify-content: center;
-  }
-
-  .pill-label {
-    display: inline;
-  }
-
-  .filters {
-    flex-wrap: nowrap;
-    gap: 6px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    width: 100%;
-  }
-
-  .filters::-webkit-scrollbar {
+  /* No room for the credit strip in the compact mobile layout, so it is hidden */
+  .map-attribution {
     display: none;
   }
 
-  .filters-scroll-arrow {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 28px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: var(--ink);
-    color: #fff;
-    cursor: pointer;
-    z-index: 2;
+  /* Same gap from the right edge as desktop above, kept in sync so the buttons sit the same distance in on both screen sizes */
+  .leaflet-bottom.leaflet-right {
+    margin-right: 12px;
   }
-
-  .filters-scroll-arrow[hidden] {
-    display: none;
-  }
-
-  .area-select-icon {
-    display: inline-block;
-    position: relative;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .area-select {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    border: none;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-  }
-
-  .area-filter-dot {
-    display: block;
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 1.5px solid var(--surface);
-  }
-
-  .area-filter-dot[hidden] {
-    display: none;
-  }
-
-  .map-panel {
-    padding: 0;
-  }
-
-  #map {
-    border-radius: 0;
-    border: none;
-  }
-
-  .leaflet-control-attribution {
-    font-size: 0px !important;
-  }
-
-  .leaflet-control-attribution img {
-    height: 0px !important;
-  }
-
-  .fab { bottom: calc(var(--peek-height) + 8px); right: 16px; }
 }

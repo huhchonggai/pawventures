@@ -19,16 +19,19 @@ TLDR, I hope this project is functional and useful while at the same time, using
 
 ## Current features
 
-- Interactive map of Singapore (OneMap Grey basemap), covering dog parks
-  and dog friendly malls, each with their own marker shape and colour
+- Interactive map of Singapore (OneMap Grey basemap), covering dog parks,
+  dog friendly malls and dog friendly cafes/restaurants (eats), each with their own marker
+  shape and colour
 - Custom shaped markers with clustering when locations are close together
 - Click a pin for a popup with address, opening hours, tags (fenced,
   off-leash, water points, etc.), a short note, a like button and a
   "Get directions" link that opens up Google Maps
 - A "community approved" star badge appears on a location's popup once it
   passes 10 likes
-- Filter by category (Parks, Malls while Cafes and Vets are still coming) and
+- Filter by category (Parks, Malls, Eats, while Vets is still coming) and
   by area (eg, Bishan, Jurong, Toa Payoh)
+- Search bar for an address or postal code (using OneMap search API), merged into
+  the same floating header as the category tabs. Selecting a result drops a pin on the searched location
 - A "locate me" button on the map finds the user's current position via the
   browser's geolocation API and drops a pin there. The pin is draggable, so
   GPS drift can be corrected by hand. The map auto pans if it is dragged
@@ -54,8 +57,10 @@ TLDR, I hope this project is functional and useful while at the same time, using
 
 Roughly in the order I am planning to tackle them,
 
-- [ ] Additional categories: pet friendly cafes/restaurants, vets
-      (filter pills for these already exist in the UI, marked "coming soon")
+- [ ] Additional categories: vets (filter pill already exists in the UI,
+      marked "coming soon")
+- [ ] Store and show each location's `website` link (already present in
+      `eats.json`, not yet in the database schema or the popup UI)
 - [ ] A way to promote an approved contribution straight into a live
       location, instead of manually re-entering it through the admin form
 - [ ] Automated tests (currently just a manual checklist — see Testing)
@@ -79,7 +84,8 @@ pawventures/
 │   ├── seed.js                # imports seed-data/*.json into the database
 │   ├── seed-data/
 │   │   ├── parks.json         # bulk park data — see field guide below
-│   │   └── malls.json         # bulk mall data — same field guide applies
+│   │   ├── malls.json         # bulk mall data — same field guide applies
+│   │   └── eats.json          # bulk eats data (cafes, restaurants, bars) — same field guide applies
 │   ├── data/                  # the live SQLite database (gitignored)
 │   ├── routes/
 │   │   ├── locations.js       # GET /api/locations, POST /:id/like
@@ -100,10 +106,10 @@ pawventures/
 
 | I want to... | Edit this |
 |---|---|
-| Add several locations at once | `backend/seed-data/parks.json` or `malls.json`, then run `npm run seed` — see below |
+| Add several locations at once | `backend/seed-data/parks.json`, `malls.json`, or `eats.json`, then run `npm run seed` — see below |
 | Add or edit a single location | The admin page (`/admin.html`) — "Add a location" form |
 | Change the page title (browser tab text) | `<title>` tag in `frontend/index.html` |
-| Change the header logo or text | `.wordmark` block in `frontend/index.html`, image in `frontend/logo/` |
+| Change the header logo | `.search-logo` image in `frontend/index.html`, file in `frontend/logo/` |
 | Change the favicon | `<link rel="icon" ...>` tag in `frontend/index.html` `<head>` |
 | Change marker size or color | `.paw-pin` rule in `frontend/styles.css` and `iconSize` in `frontend/app.js` |
 | Change the color palette / fonts | `:root` CSS variables at the top of `frontend/styles.css` |
@@ -118,11 +124,11 @@ pawventures/
 
 ### `seed-data/*.json` field guide
 
-Both `parks.json` and `malls.json` are only read once each, by `seed.js`,
-to bulk-import locations into the database. It's safe to re-run
-`npm run seed` any time — matching entries (by `id`) get their fields
-synced to whatever's currently in the JSON, so edits there do carry
-through on re-seed, not just new additions.
+`parks.json`, `malls.json` and `eats.json` are read by `seed.js` to
+bulk-import locations into the database. It's safe to re-run `npm run
+seed` any time — matching entries (by `id`) get their fields synced to
+whatever's currently in the JSON, so edits there do carry through on
+re-seed, not just new additions.
 
 | Field | What it controls |
 |---|---|
@@ -131,9 +137,25 @@ through on re-seed, not just new additions.
 | `area` | Powers the area filter dropdown — new values appear there automatically |
 | `lat` / `lng` | Pin position on the map and the destination used for "Get directions" |
 | `address` | Shown in the popup |
-| `hours` | Shown in the popup |
+| `hours` | Shown in the popup — use `Daily: hh.mmam - hh.mmpm` for one set of hours every day, or one `Day - Day: hh.mmam - hh.mmpm` line per day group (separated by `\n`) when hours vary by day |
 | `tags` | Small pill badges in the popup — any number, free text |
 | `note` | The italic tip line in the popup |
+| `website` | Present in `eats.json` today, not yet used anywhere — see Roadmap |
+
+#### Removing an entry from a seed file
+
+Deleting a row from the JSON does **not** delete it from the database on
+its own — `npm run seed` only ever adds and updates. Two ways to see and
+then remove what's left over:
+
+- `npm run seed` on its own lists any database row (that seed.js itself
+  added, i.e. not one added through the admin page) whose id is no
+  longer in the matching JSON file, without deleting anything
+- `node seed.js --prune` does the same import, then deletes those listed
+  rows
+
+Rows added directly through the admin page's "Add a location" form are
+never affected by pruning, no matter what is or isn't in the JSON.
 
 ## Running it locally
 
@@ -163,6 +185,8 @@ quick manual pass covers it for now,
 - [ ] All expected pins appear, correctly clustered when zoomed out
 - [ ] Clicking a pin opens its popup with correct details
 - [ ] Category and area filters narrow the pins shown correctly, together
+- [ ] Searching an address or postal code shows matching results and
+      picking one drops a pin there and clears the search bar
 - [ ] The like button increments the count and shows the star badge past 10 likes
 - [ ] "Get directions" opens Google Maps at the right coordinates, with the correct button color
 - [ ] The locate button drops a "you are here" pin, nearby pins pick up a

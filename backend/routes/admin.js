@@ -52,8 +52,8 @@ router.post('/locations', requireAdmin, (req, res) => {
 
   try {
     db.prepare(`
-      INSERT INTO locations (id, category, name, area, lat, lng, address, hours, tags, note, like_count, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'approved')
+      INSERT INTO locations (id, category, name, area, lat, lng, address, hours, tags, note, like_count, status, source)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'approved', 'admin')
     `).run(
       finalId,
       category || 'park',
