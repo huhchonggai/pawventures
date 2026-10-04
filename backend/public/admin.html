@@ -82,6 +82,9 @@
   <label>Note</label>
   <textarea id="locNote" rows="2"></textarea>
 
+  <label>Website (optional)</label>
+  <input type="url" id="locWebsite" placeholder="https://...">
+
   <label>Custom id (optional — auto-generated from name if left blank)</label>
   <input type="text" id="locId" placeholder="e.g. jurong-lake-gardens">
 
@@ -122,6 +125,7 @@
       hours: document.getElementById('locHours').value.trim() || undefined,
       tags: tagsRaw ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [],
       note: document.getElementById('locNote').value.trim() || undefined,
+      website: document.getElementById('locWebsite').value.trim() || undefined,
     };
 
     const res = await fetch('/api/admin/locations', {

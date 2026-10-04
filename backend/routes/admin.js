@@ -42,7 +42,7 @@ router.post('/contributions/:id/reject', requireAdmin, (req, res) => {
 
 // This route creates a live, approved location directly. It replaces the old workflow of manually editing parks.json.
 router.post('/locations', requireAdmin, (req, res) => {
-  const { id, category, name, area, lat, lng, address, hours, tags, note } = req.body || {};
+  const { id, category, name, area, lat, lng, address, hours, tags, note, website } = req.body || {};
 
   if (!name || !area || !address || lat === undefined || lng === undefined) {
     return res.status(400).json({ error: 'name, area, address, lat, and lng are required.' });
@@ -52,8 +52,8 @@ router.post('/locations', requireAdmin, (req, res) => {
 
   try {
     db.prepare(`
-      INSERT INTO locations (id, category, name, area, lat, lng, address, hours, tags, note, like_count, status, source)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'approved', 'admin')
+      INSERT INTO locations (id, category, name, area, lat, lng, address, hours, tags, note, website, like_count, status, source)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'approved', 'admin')
     `).run(
       finalId,
       category || 'park',
@@ -65,6 +65,7 @@ router.post('/locations', requireAdmin, (req, res) => {
       hours || null,
       JSON.stringify(tags || []),
       note || null,
+      website || null,
     );
   } catch (err) {
     if (String(err.message).includes('UNIQUE')) {

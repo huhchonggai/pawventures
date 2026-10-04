@@ -59,8 +59,6 @@ Roughly in the order I am planning to tackle them,
 
 - [ ] Additional categories: vets (filter pill already exists in the UI,
       marked "coming soon")
-- [ ] Store and show each location's `website` link (already present in
-      `eats.json`, not yet in the database schema or the popup UI)
 - [ ] A way to promote an approved contribution straight into a live
       location, instead of manually re-entering it through the admin form
 - [ ] Automated tests (currently just a manual checklist — see Testing)
@@ -140,7 +138,7 @@ re-seed, not just new additions.
 | `hours` | Shown in the popup — use `Daily: hh.mmam - hh.mmpm` for one set of hours every day, or one `Day - Day: hh.mmam - hh.mmpm` line per day group (separated by `\n`) when hours vary by day |
 | `tags` | Small pill badges in the popup — any number, free text |
 | `note` | The italic tip line in the popup |
-| `website` | Present in `eats.json` today, not yet used anywhere — see Roadmap |
+| `website` | Shown in the popup as a "Visit website ↗" link, if present |
 
 #### Removing an entry from a seed file
 

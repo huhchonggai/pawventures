@@ -58,4 +58,11 @@ try {
   if (!/duplicate column/i.test(err.message)) throw err;
 }
 
+// Add the website column for the existing database that does not have it yet
+try {
+  db.exec('ALTER TABLE locations ADD COLUMN website TEXT;');
+} catch (err) {
+  if (!/duplicate column/i.test(err.message)) throw err;
+}
+
 module.exports = db;

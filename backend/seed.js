@@ -28,9 +28,9 @@ const existsStmt = db.prepare('SELECT 1 FROM locations WHERE id = ?');
 // like_count and status stay untouched.. Those reflect real activities, not static content
 const upsert = db.prepare(`
   INSERT INTO locations
-    (id, category, name, area, lat, lng, address, size, hours, tags, note, like_count, status, source)
+    (id, category, name, area, lat, lng, address, size, hours, tags, note, website, like_count, status, source)
   VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'approved', 'seed')
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'approved', 'seed')
   ON CONFLICT(id) DO UPDATE SET
     category = excluded.category,
     name = excluded.name,
@@ -41,7 +41,8 @@ const upsert = db.prepare(`
     size = excluded.size,
     hours = excluded.hours,
     tags = excluded.tags,
-    note = excluded.note
+    note = excluded.note,
+    website = excluded.website
 `);
 
 let totalNew = 0;
@@ -79,6 +80,7 @@ for (const { file, category } of SEED_FILES) {
       loc.hours,
       JSON.stringify(loc.tags || []),
       loc.note,
+      loc.website || null,
     );
 
     if (alreadyExists) totalUpdated++;
@@ -86,7 +88,7 @@ for (const { file, category } of SEED_FILES) {
   }
 
   // This file is the confirmed list for rows this script owns (source = 'seed') in this
-  // category. Admin added rows (source = 'admin') are never matched, so they're always safe.
+  // category. Admin added rows (source = 'admin') are never matched, so they're always safe
   const currentIds = locations.map((loc) => loc.id);
   if (currentIds.length > 0) {
     const placeholders = currentIds.map(() => '?').join(',');

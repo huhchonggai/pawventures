@@ -235,10 +235,14 @@ function detailHTML(park) {
   const star = park.like_count >= 10 ? '<span class="approved-star" title="Community approved">★</span>' : '';
   const liked = getLikedSet().has(park.id);
   const size = park.size ? `<p class="detail-size">${escapeHtml(park.size)}</p>` : '';
+  const website = park.website
+    ? `<a class="detail-website" href="${escapeHtml(park.website)}" target="_blank" rel="noopener">Visit website ↗</a>`
+    : '';
   return `
     <p class="detail-area">${escapeHtml(park.area)}</p>
     <h2 class="detail-name">${escapeHtml(park.name)}${star}</h2>
     <p class="detail-address">${escapeHtml(park.address)}</p>
+    ${website}
     ${size}
     <div class="detail-tags">${tags}</div>
     <p class="detail-hours">${escapeHtml(park.hours)}</p>
